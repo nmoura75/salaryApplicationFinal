@@ -55,6 +55,9 @@ public class Employee {
     @Column(nullable = false)
     private Integer familiarSituation;
 
+    @Column(nullable = false)
+    private Integer usefulDaysOfWork;
+
     private String position;
     private String department;
     private String bankAccount;

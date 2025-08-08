@@ -25,6 +25,7 @@ CREATE TABLE employees (
     net_salary NUMERIC(38,2) NOT NULL,
     dependents INTEGER,
     familiar_situation INTEGER NOT NULL,
+    useful_days_of_work INTEGER NOT NULL,
     position TEXT,
     department TEXT,
     bank_account TEXT,

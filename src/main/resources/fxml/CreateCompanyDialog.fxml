@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.payroll.controller.CreateCompanyDialogController"
+      styleClass="root" spacing="20" alignment="TOP_CENTER">
+    
+    <padding>
+        <Insets top="30" right="30" bottom="30" left="30"/>
+    </padding>
+    
+    <!-- Header -->
+    <VBox alignment="CENTER" spacing="10">
+        <Text styleClass="title" text="Create New Company"/>
+        <Text styleClass="subtitle" text="Enter company information"/>
+    </VBox>
+    
+    <!-- Form -->
+    <VBox spacing="15" maxWidth="500" prefWidth="500">
+        <VBox spacing="5">
+            <Label text="Company Name *" styleClass="label"/>
+            <TextField fx:id="nameField" promptText="Enter company name"/>
+        </VBox>
+        
+        <VBox spacing="5">
+            <Label text="Tax ID *" styleClass="label"/>
+            <TextField fx:id="taxIdField" promptText="Enter tax ID"/>
+        </VBox>
+        
+        <VBox spacing="5">
+            <Label text="Social Security ID *" styleClass="label"/>
+            <TextField fx:id="socialSecurityIdField" promptText="Enter social security ID"/>
+        </VBox>
+        
+        <VBox spacing="5">
+            <Label text="Address" styleClass="label"/>
+            <TextField fx:id="addressField" promptText="Enter company address"/>
+        </VBox>
+        
+        <VBox spacing="5">
+            <Label text="Phone" styleClass="label"/>
+            <TextField fx:id="phoneField" promptText="Enter phone number"/>
+        </VBox>
+        
+        <VBox spacing="5">
+            <Label text="Email" styleClass="label"/>
+            <TextField fx:id="emailField" promptText="Enter email address"/>
+        </VBox>
+    </VBox>
+    
+    <!-- Buttons -->
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Cancel" styleClass="button secondary" onAction="#cancel"/>
+        <Button text="Create Company" styleClass="button" onAction="#createCompany"/>
+    </HBox>
+    
+</VBox>

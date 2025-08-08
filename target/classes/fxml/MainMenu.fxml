@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.payroll.controller.MainMenuController"
+      styleClass="root" spacing="30" alignment="TOP_CENTER">
+    
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+    
+    <!-- Header -->
+    <VBox alignment="CENTER" spacing="10">
+        <Text styleClass="title" text="Salary Calculator"/>
+        <Text fx:id="companyNameText" styleClass="subtitle" text="Company Name"/>
+    </VBox>
+    
+    <!-- Back Button -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Button fx:id="backButton" text="← Back to Company Selection" 
+                onAction="#goBackToCompanySelection" 
+                styleClass="back-button"/>
+    </HBox>
+    
+    <!-- Menu Grid -->
+    <ScrollPane fitToWidth="true" styleClass="scroll-pane">
+        <VBox fx:id="menuContainer" spacing="20" alignment="TOP_CENTER">
+            <!-- Menu cards will be created dynamically in horizontal rows -->
+        </VBox>
+    </ScrollPane>
+    
+</VBox>
