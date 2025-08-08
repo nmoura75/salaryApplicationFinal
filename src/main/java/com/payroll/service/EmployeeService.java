@@ -1,5 +1,6 @@
 package com.payroll.service;
 
+import com.payroll.model.Company;
 import com.payroll.model.Employee;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.CompanyRepository;
@@ -25,10 +26,16 @@ public class EmployeeService {
     public Employee createEmployee(Employee employee) {
         validateNewEmployee(employee);
         
-        // Ensure company exists
-        companyRepository.findById(employee.getCompany().getId())
-                .orElseThrow(() -> new EntityNotFoundException("Company not found"));
+        // Ensure company exists and is properly set
+        Company company = employee.getCompany();
+        if (company == null || company.getId() == null) {
+            throw new IllegalArgumentException("Company must be set for employee");
+        }
         
+        // Verify company exists in database
+        companyRepository.findById(company.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Company not found"));
+
         // Calculate initial contributions and net salary
         calculateEmployeeContributions(employee);
         
@@ -61,6 +68,10 @@ public class EmployeeService {
         employee.setPhone(employeeDetails.getPhone());
         employee.setDependents(employeeDetails.getDependents());
         employee.setFamiliarSituation(employeeDetails.getFamiliarSituation());
+        employee.setDateOfBirth(employeeDetails.getDateOfBirth());
+        employee.setIrsTable(employeeDetails.getIrsTable());
+        employee.setStatus(employeeDetails.getStatus());
+        employee.setUsefulDaysOfWork(employeeDetails.getUsefulDaysOfWork());
 
         // Recalculate contributions and net salary
         calculateEmployeeContributions(employee);
@@ -78,6 +89,10 @@ public class EmployeeService {
             throw new EntityNotFoundException("Company not found");
         }
         return employeeRepository.findByCompanyId(companyId);
+    }
+
+    public List<Employee> getAllEmployees() {
+        return employeeRepository.findAll();
     }
 
     public Page<Employee> searchEmployees(Integer companyId, String searchTerm, Pageable pageable) {

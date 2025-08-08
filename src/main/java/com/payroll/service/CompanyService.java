@@ -65,6 +65,11 @@ public class CompanyService {
                 .orElseThrow(() -> new EntityNotFoundException("Company not found with tax ID: " + taxId));
     }
 
+    public Company getCompanyByName(String name) {
+        return companyRepository.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("Company not found with name: " + name));
+    }
+
     public List<Company> getAllCompanies() {
         return companyRepository.findAll();
     }

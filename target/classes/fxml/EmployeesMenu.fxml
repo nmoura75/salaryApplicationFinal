@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.payroll.controller.EmployeesMenuController"
+      styleClass="root" spacing="20" alignment="TOP_CENTER">
+    
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+    
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Button fx:id="backButton" text="← Back to Main Menu" 
+                onAction="#goBackToMainMenu" 
+                styleClass="back-button"/>
+        <VBox alignment="CENTER_LEFT" spacing="5">
+            <Text styleClass="title" text="Employees Management"/>
+            <Text fx:id="companyNameText" styleClass="subtitle" text="Company Name"/>
+        </VBox>
+    </HBox>
+    
+    <!-- Search and Add Section -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <TextField fx:id="searchField" promptText="Search employees..." 
+                   prefWidth="300" maxWidth="300"
+                   onKeyReleased="#searchEmployees"/>
+        <Button text="Add New Employee" styleClass="button" 
+                onAction="#showAddEmployeeDialog"/>
+    </HBox>
+    
+    <!-- Employees Table -->
+    <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Employees List" styleClass="label subtitle"/>
+        <TableView fx:id="employeesTable" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+                <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
+                <TableColumn fx:id="taxIdColumn" text="Tax ID" prefWidth="120"/>
+                <TableColumn fx:id="socialSecurityIdColumn" text="Social Security ID" prefWidth="150"/>
+                <TableColumn fx:id="dateOfBirthColumn" text="Date of Birth" prefWidth="120"/>
+                <TableColumn fx:id="baseSalaryColumn" text="Base Salary" prefWidth="120"/>
+                <TableColumn fx:id="hireDateColumn" text="Hire Date" prefWidth="120"/>
+                <TableColumn fx:id="dependentsColumn" text="Dependents" prefWidth="100"/>
+                <TableColumn fx:id="irsTableColumn" text="IRS Table" prefWidth="100"/>
+                <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+                <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </VBox>
+    
+    <!-- Status Bar -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label fx:id="statusLabel" text="Ready" styleClass="label caption"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="countLabel" text="0 employees" styleClass="label caption"/>
+    </HBox>
+    
+</VBox>

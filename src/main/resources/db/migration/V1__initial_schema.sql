@@ -23,7 +23,7 @@ CREATE TABLE employees (
     tax_id_contribution NUMERIC(38,2) NOT NULL,
     total_contributions NUMERIC(38,2) NOT NULL,
     net_salary NUMERIC(38,2) NOT NULL,
-    dependents INTEGER,
+    dependents INTEGER DEFAULT 0,
     familiar_situation INTEGER NOT NULL,
     useful_days_of_work INTEGER NOT NULL,
     position TEXT,
@@ -31,6 +31,9 @@ CREATE TABLE employees (
     bank_account TEXT,
     email TEXT,
     phone TEXT,
+    date_of_birth DATE,
+    irs_table INTEGER DEFAULT 1,
+    status TEXT DEFAULT 'ACTIVE',
     FOREIGN KEY (company_id) REFERENCES companies(id)
 );
 

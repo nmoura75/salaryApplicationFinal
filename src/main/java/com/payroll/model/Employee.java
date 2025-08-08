@@ -1,5 +1,7 @@
 package com.payroll.model;
 
+import com.payroll.model.Company;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,6 +59,15 @@ public class Employee {
 
     @Column(nullable = false)
     private Integer usefulDaysOfWork;
+
+    @Column
+    private LocalDate dateOfBirth;
+
+    @Column(nullable = false)
+    private Integer irsTable = 1;
+
+    @Column(nullable = false)
+    private String status = "ACTIVE";
 
     private String position;
     private String department;

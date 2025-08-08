@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<?import javafx.collections.FXCollections?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.payroll.controller.EditEmployeeDialogController"
+      styleClass="root" spacing="20" alignment="TOP_CENTER">
+    
+    <padding>
+        <Insets top="30" right="40" bottom="30" left="40"/>
+    </padding>
+    
+    <!-- Header -->
+    <VBox alignment="CENTER" spacing="10">
+        <Text styleClass="title" text="Edit Employee"/>
+        <Text fx:id="companyNameText" styleClass="subtitle" text="Company Name"/>
+    </VBox>
+    
+    <!-- Form -->
+    <VBox spacing="15" maxWidth="500" prefWidth="500">
+        <!-- Personal Information -->
+        <VBox spacing="10">
+            <Label text="Personal Information" styleClass="label subtitle"/>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="First Name *" styleClass="label"/>
+                    <TextField fx:id="firstNameField" promptText="Enter first name"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Last Name *" styleClass="label"/>
+                    <TextField fx:id="lastNameField" promptText="Enter last name"/>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Tax ID *" styleClass="label"/>
+                    <TextField fx:id="taxIdField" promptText="Enter tax ID"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Social Security ID *" styleClass="label"/>
+                    <TextField fx:id="socialSecurityIdField" promptText="Enter social security ID"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Date of Birth" styleClass="label"/>
+                    <DatePicker fx:id="dateOfBirthPicker"/>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Email" styleClass="label"/>
+                    <TextField fx:id="emailField" promptText="Enter email"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Phone" styleClass="label"/>
+                    <TextField fx:id="phoneField" promptText="Enter phone"/>
+                </VBox>
+            </HBox>
+        </VBox>
+        
+        <!-- Employment Information -->
+        <VBox spacing="10">
+            <Label text="Employment Information" styleClass="label subtitle"/>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Base Salary *" styleClass="label"/>
+                    <TextField fx:id="baseSalaryField" promptText="Enter base salary"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Hire Date *" styleClass="label"/>
+                    <DatePicker fx:id="hireDatePicker"/>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Dependents" styleClass="label"/>
+                    <TextField fx:id="dependentsField" promptText="Number of dependents"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Familiar Situation" styleClass="label"/>
+                    <ComboBox fx:id="familiarSituationComboBox" promptText="Select familiar situation">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="Single"/>
+                                <String fx:value="Married"/>
+                                <String fx:value="Divorced"/>
+                                <String fx:value="Widowed"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="IRS Table" styleClass="label"/>
+                    <ComboBox fx:id="irsTableComboBox" promptText="Select IRS table">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="Table 1"/>
+                                <String fx:value="Table 2"/>
+                                <String fx:value="Table 3"/>
+                                <String fx:value="Table 4"/>
+                                <String fx:value="Table 5"/>
+                                <String fx:value="Table 6"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Status" styleClass="label"/>
+                    <ComboBox fx:id="statusComboBox" promptText="Select status">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="ACTIVE"/>
+                                <String fx:value="INACTIVE"/>
+                            </FXCollections>
+                        </items>
+                    </ComboBox>
+                </VBox>
+            </HBox>
+        </VBox>
+    </VBox>
+    
+    <!-- Buttons -->
+    <HBox spacing="15" alignment="CENTER">
+        <Button text="Cancel" styleClass="button secondary" onAction="#cancel"/>
+        <Button text="Update Employee" styleClass="button" onAction="#updateEmployee"/>
+    </HBox>
+    
+</VBox>
