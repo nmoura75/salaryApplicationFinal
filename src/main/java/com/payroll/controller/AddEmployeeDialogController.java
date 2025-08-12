@@ -74,6 +74,13 @@ public class AddEmployeeDialogController {
     public void initialize() {
         // Set default values
         hireDatePicker.setValue(LocalDate.now());
+        
+        // Initialize ComboBox options
+        familiarSituationComboBox.getItems().addAll("Single", "Married", "Divorced", "Widowed");
+        irsTableComboBox.getItems().addAll("Table 1", "Table 2", "Table 3", "Table 4", "Table 5", "Table 6");
+        statusComboBox.getItems().addAll("ACTIVE", "INACTIVE");
+        
+        // Set default selections
         familiarSituationComboBox.getSelectionModel().selectFirst();
         irsTableComboBox.getSelectionModel().selectFirst();
         statusComboBox.getSelectionModel().selectFirst();

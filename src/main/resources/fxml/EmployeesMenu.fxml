@@ -5,59 +5,50 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
 
-<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
-      fx:controller="com.payroll.controller.EmployeesMenuController"
-      styleClass="root" spacing="20" alignment="TOP_CENTER">
-    
+<VBox spacing="20" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.payroll.controller.EmployeesMenuController">
     <padding>
-        <Insets top="30" right="40" bottom="30" left="40"/>
+        <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
-    
+
     <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="20">
-        <Button fx:id="backButton" text="← Back to Main Menu" 
-                onAction="#goBackToMainMenu" 
-                styleClass="back-button"/>
-        <VBox alignment="CENTER_LEFT" spacing="5">
-            <Text styleClass="title" text="Employees Management"/>
-            <Text fx:id="companyNameText" styleClass="subtitle" text="Company Name"/>
-        </VBox>
+        <Text text="Employees Management" styleClass="title"/>
+        <Button fx:id="backButton" text="← Back to Main Menu" onAction="#goBackToMainMenu" styleClass="back-button"/>
     </HBox>
     
-    <!-- Search and Add Section -->
+    <!-- Company Name Display -->
     <HBox alignment="CENTER_LEFT" spacing="20">
-        <TextField fx:id="searchField" promptText="Search employees..." 
-                   prefWidth="300" maxWidth="300"
-                   onKeyReleased="#searchEmployees"/>
-        <Button text="Add New Employee" styleClass="button" 
-                onAction="#showAddEmployeeDialog"/>
+        <Label fx:id="companyNameText" styleClass="label subtitle"/>
     </HBox>
-    
+
+    <!-- Search and Add Employee -->
+    <HBox spacing="20" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search employees..." prefWidth="300"/>
+        <Button text="Add New Employee" onAction="#showAddEmployeeDialog" styleClass="primary-button"/>
+    </HBox>
+
     <!-- Employees Table -->
-    <VBox spacing="10" VBox.vgrow="ALWAYS">
-        <Label text="Employees List" styleClass="label subtitle"/>
-        <TableView fx:id="employeesTable" VBox.vgrow="ALWAYS">
-            <columns>
-                <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
-                <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
-                <TableColumn fx:id="taxIdColumn" text="Tax ID" prefWidth="120"/>
-                <TableColumn fx:id="socialSecurityIdColumn" text="Social Security ID" prefWidth="150"/>
-                <TableColumn fx:id="dateOfBirthColumn" text="Date of Birth" prefWidth="120"/>
-                <TableColumn fx:id="baseSalaryColumn" text="Base Salary" prefWidth="120"/>
-                <TableColumn fx:id="hireDateColumn" text="Hire Date" prefWidth="120"/>
-                <TableColumn fx:id="dependentsColumn" text="Dependents" prefWidth="100"/>
-                <TableColumn fx:id="irsTableColumn" text="IRS Table" prefWidth="100"/>
-                <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
-                <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="150"/>
-            </columns>
-        </TableView>
-    </VBox>
-    
-    <!-- Status Bar -->
-    <HBox alignment="CENTER_LEFT" spacing="20">
-        <Label fx:id="statusLabel" text="Ready" styleClass="label caption"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Label fx:id="countLabel" text="0 employees" styleClass="label caption"/>
+    <TableView fx:id="employeesTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="nameColumn" text="Name" prefWidth="150"/>
+            <TableColumn fx:id="taxIdColumn" text="Tax ID" prefWidth="100"/>
+            <TableColumn fx:id="socialSecurityIdColumn" text="Social Security ID" prefWidth="120"/>
+            <TableColumn fx:id="baseSalaryColumn" text="Base Salary" prefWidth="100"/>
+            <TableColumn fx:id="hireDateColumn" text="Hire Date" prefWidth="100"/>
+            <TableColumn fx:id="dateOfBirthColumn" text="Date of Birth" prefWidth="100"/>
+            <TableColumn fx:id="dependentsColumn" text="Dependents" prefWidth="80"/>
+            <TableColumn fx:id="irsTableColumn" text="IRS Table" prefWidth="80"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <!-- Action Buttons (enabled only when row is selected) -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <Button fx:id="editButton" text="Edit Employee" onAction="#editSelectedEmployee" styleClass="secondary-button" disable="true"/>
+        <Button fx:id="deleteButton" text="Delete Employee" onAction="#deleteSelectedEmployee" styleClass="danger-button" disable="true"/>
     </HBox>
-    
+
+    <!-- Status Bar -->
+    <Text fx:id="statusText" styleClass="status-text"/>
 </VBox>

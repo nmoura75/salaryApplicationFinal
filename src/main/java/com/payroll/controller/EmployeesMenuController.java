@@ -11,7 +11,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -35,13 +37,10 @@ public class EmployeesMenuController {
     private ApplicationContext applicationContext;
 
     @FXML
-    private Text companyNameText;
+    private Label companyNameText;
     
     @FXML
     private Button backButton;
-    
-    @FXML
-    private TextField searchField;
     
     @FXML
     private TableView<Employee> employeesTable;
@@ -77,13 +76,16 @@ public class EmployeesMenuController {
     private TableColumn<Employee, String> statusColumn;
     
     @FXML
-    private TableColumn<Employee, Void> actionsColumn;
+    private Button editButton;
     
     @FXML
-    private Label statusLabel;
+    private Button deleteButton;
     
     @FXML
-    private Label countLabel;
+    private Text statusText;
+    
+    @FXML
+    private TextField searchField;
 
     private String companyName;
     private ObservableList<Employee> employeesList;
@@ -104,18 +106,18 @@ public class EmployeesMenuController {
     }
 
     private void setupTable() {
-        // Configure columns
-        idColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getId()));
+        // Setup table columns
+        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(
             data.getValue().getFirstName() + " " + data.getValue().getLastName()));
-        taxIdColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getTaxId()));
-        socialSecurityIdColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getSocialSecurityId()));
-        dateOfBirthColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getDateOfBirth()));
-        baseSalaryColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getBaseSalary()));
-        hireDateColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getHireDate()));
-        dependentsColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getDependents()));
-        irsTableColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleObjectProperty<>(data.getValue().getIrsTable()));
-        statusColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getStatus()));
+        taxIdColumn.setCellValueFactory(new PropertyValueFactory<>("taxId"));
+        socialSecurityIdColumn.setCellValueFactory(new PropertyValueFactory<>("socialSecurityId"));
+        baseSalaryColumn.setCellValueFactory(new PropertyValueFactory<>("baseSalary"));
+        hireDateColumn.setCellValueFactory(new PropertyValueFactory<>("hireDate"));
+        dateOfBirthColumn.setCellValueFactory(new PropertyValueFactory<>("dateOfBirth"));
+        dependentsColumn.setCellValueFactory(new PropertyValueFactory<>("dependents"));
+        irsTableColumn.setCellValueFactory(new PropertyValueFactory<>("irsTable"));
+        statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
         
         // Format salary column
         baseSalaryColumn.setCellFactory(column -> new TableCell<Employee, BigDecimal>() {
@@ -125,24 +127,12 @@ public class EmployeesMenuController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(String.format("€%.2f", item));
+                    setText("€" + item.toString());
                 }
             }
         });
         
         // Format date columns
-        dateOfBirthColumn.setCellFactory(column -> new TableCell<Employee, LocalDate>() {
-            @Override
-            protected void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(item.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                }
-            }
-        });
-        
         hireDateColumn.setCellFactory(column -> new TableCell<Employee, LocalDate>() {
             @Override
             protected void updateItem(LocalDate item, boolean empty) {
@@ -155,55 +145,46 @@ public class EmployeesMenuController {
             }
         });
         
-        // Format status column
+        dateOfBirthColumn.setCellFactory(column -> new TableCell<Employee, LocalDate>() {
+            @Override
+            protected void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                }
+            }
+        });
+        
+        // Format status column with color coding
         statusColumn.setCellFactory(column -> new TableCell<Employee, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
+                    setStyle("");
                 } else {
                     setText(item);
                     if ("ACTIVE".equals(item)) {
-                        setStyle("-fx-text-fill: #34c759; -fx-font-weight: bold;");
+                        setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                     } else {
-                        setStyle("-fx-text-fill: #ff3b30; -fx-font-weight: bold;");
+                        setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                     }
                 }
             }
         });
         
-        // Setup actions column
-        actionsColumn.setCellFactory(column -> new TableCell<Employee, Void>() {
-            private final Button editButton = new Button("Edit");
-            private final Button deleteButton = new Button("Delete");
-            private final HBox buttonBox = new HBox(5, editButton, deleteButton);
-            
-            {
-                editButton.getStyleClass().addAll("button", "secondary");
-                deleteButton.getStyleClass().addAll("button", "danger");
-                
-                editButton.setOnAction(event -> {
-                    Employee employee = getTableView().getItems().get(getIndex());
-                    editEmployee(employee);
-                });
-                
-                deleteButton.setOnAction(event -> {
-                    Employee employee = getTableView().getItems().get(getIndex());
-                    deleteEmployee(employee);
-                });
-            }
-            
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(buttonBox);
-                }
-            }
+        // Setup table selection listener
+        employeesTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            boolean hasSelection = newValue != null;
+            editButton.setDisable(!hasSelection);
+            deleteButton.setDisable(!hasSelection);
         });
+        
+        // Setup search functionality
+        setupSearch();
     }
 
     private void setupSearch() {
@@ -235,7 +216,6 @@ public class EmployeesMenuController {
             employeesList.addAll(employees);
             
             updateStatus("Loaded " + employees.size() + " employees", "success");
-            updateCount(employees.size());
             
         } catch (Exception e) {
             updateStatus("Error loading employees: " + e.getMessage(), "error");
@@ -245,6 +225,26 @@ public class EmployeesMenuController {
     @FXML
     private void searchEmployees() {
         // Search is handled by the FilteredList
+    }
+    
+    @FXML
+    private void editSelectedEmployee() {
+        Employee employee = employeesTable.getSelectionModel().getSelectedItem();
+        if (employee != null) {
+            editEmployee(employee);
+        } else {
+            showError("Error", "Please select an employee to edit.");
+        }
+    }
+    
+    @FXML
+    private void deleteSelectedEmployee() {
+        Employee employee = employeesTable.getSelectionModel().getSelectedItem();
+        if (employee != null) {
+            deleteEmployee(employee);
+        } else {
+            showError("Error", "Please select an employee to delete.");
+        }
     }
 
     @FXML
@@ -349,20 +349,10 @@ public class EmployeesMenuController {
     }
 
     private void updateStatus(String message, String type) {
-        Platform.runLater(() -> {
-            statusLabel.setText(message);
-            if ("error".equals(type)) {
-                statusLabel.setStyle("-fx-text-fill: #ff3b30;");
-            } else {
-                statusLabel.setStyle("-fx-text-fill: #34c759;");
-            }
-        });
-    }
-
-    private void updateCount(int count) {
-        Platform.runLater(() -> {
-            countLabel.setText(count + " employee" + (count != 1 ? "s" : ""));
-        });
+        if (statusText != null) {
+            statusText.setText(message);
+            // You can add styling based on type if needed
+        }
     }
 
     private void showError(String title, String message) {

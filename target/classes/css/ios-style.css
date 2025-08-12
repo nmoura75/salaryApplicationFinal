@@ -14,46 +14,78 @@
     -fx-spacing: 15;
 }
 
-/* Buttons */
+/* Button Styles */
 .button {
-    -fx-background-color: #007aff;
+    -fx-background-color: #007AFF;
     -fx-text-fill: white;
-    -fx-font-size: 16;
+    -fx-font-size: 14px;
     -fx-font-weight: bold;
+    -fx-padding: 10 20;
     -fx-background-radius: 8;
-    -fx-padding: 12 24;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0, 122, 255, 0.3), 4, 0, 0, 2);
+    -fx-min-width: 80;
+    -fx-min-height: 35;
 }
 
 .button:hover {
-    -fx-background-color: #0056cc;
-    -fx-effect: dropshadow(gaussian, rgba(0, 122, 255, 0.4), 6, 0, 0, 3);
+    -fx-background-color: #0056CC;
 }
 
 .button:pressed {
     -fx-background-color: #004499;
-    -fx-effect: dropshadow(gaussian, rgba(0, 122, 255, 0.2), 2, 0, 0, 1);
 }
 
-.button.secondary {
-    -fx-background-color: #f2f2f7;
-    -fx-text-fill: #007aff;
-    -fx-border-color: #007aff;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
+.primary-button {
+    -fx-background-color: #007AFF;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-width: 80;
+    -fx-min-height: 35;
 }
 
-.button.secondary:hover {
-    -fx-background-color: #e5e5ea;
+.primary-button:hover {
+    -fx-background-color: #0056CC;
 }
 
-.button.danger {
-    -fx-background-color: #ff3b30;
+.secondary-button {
+    -fx-background-color: #5856D6;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-width: 80;
+    -fx-min-height: 35;
 }
 
-.button.danger:hover {
-    -fx-background-color: #d70015;
+.secondary-button:hover {
+    -fx-background-color: #4A49B8;
+}
+
+.danger-button {
+    -fx-background-color: #FF3B30;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-min-width: 80;
+    -fx-min-height: 35;
+}
+
+.danger-button:hover {
+    -fx-background-color: #E02E24;
+}
+
+.danger-button:disabled {
+    -fx-background-color: #C7C7CC;
+    -fx-text-fill: #8E8E93;
 }
 
 /* Back button specific styles */
@@ -343,4 +375,16 @@
     -fx-font-size: 14;
     -fx-text-fill: #8e8e93;
     -fx-text-alignment: center;
+}
+
+/* Status Text */
+.status-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: #8E8E93;
+    -fx-font-style: italic;
+}
+
+/* Container */
+.container {
+    -fx-background-color: #F2F2F7;
 }
