@@ -1,84 +1,82 @@
 package com.payroll.model;
 
-import com.payroll.model.Company;
-
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Entity
 @Table(name = "employees")
-@EqualsAndHashCode(exclude = "salaryReceipts")
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(name = "company_id", nullable = false)
+    private Integer companyId;
+
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "tax_id", nullable = false, unique = true)
     private String taxId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "social_security_id", nullable = false, unique = true)
     private String socialSecurityId;
 
-    @Column(nullable = false)
-    private LocalDate hireDate;
+    @Column(name = "hire_date", nullable = false)
+    private String hireDate;
 
-    @Column(nullable = false)
+    @Column(name = "base_salary", nullable = false, precision = 38, scale = 2)
     private BigDecimal baseSalary;
 
-    @Column(nullable = false)
+    @Column(name = "social_security_contribution", nullable = false, precision = 38, scale = 2)
     private BigDecimal socialSecurityContribution;
 
-    @Column(nullable = false)
+    @Column(name = "tax_id_contribution", nullable = false, precision = 38, scale = 2)
     private BigDecimal taxIdContribution;
 
-    @Column(nullable = false)
+    @Column(name = "total_contributions", nullable = false, precision = 38, scale = 2)
     private BigDecimal totalContributions;
 
-    @Column(nullable = false)
+    @Column(name = "net_salary", nullable = false, precision = 38, scale = 2)
     private BigDecimal netSalary;
 
-    @Column(nullable = false)
+    @Column(name = "dependents")
     private Integer dependents;
 
-    @Column(nullable = false)
+    @Column(name = "familiar_situation", nullable = false)
     private Integer familiarSituation;
 
-    @Column(nullable = false)
+    @Column(name = "useful_days_of_work", nullable = false)
     private Integer usefulDaysOfWork;
 
-    @Column
-    private LocalDate dateOfBirth;
-
-    @Column(nullable = false)
-    private Integer irsTable = 1;
-
-    @Column(nullable = false)
-    private String status = "ACTIVE";
-
+    @Column(name = "position")
     private String position;
+
+    @Column(name = "department")
     private String department;
+
+    @Column(name = "bank_account")
     private String bankAccount;
+
+    @Column(name = "email")
     private String email;
+
+    @Column(name = "phone")
     private String phone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id", nullable = false)
-    private Company company;
+    @Column(name = "date_of_birth")
+    private String dateOfBirth;
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
-    private Set<SalaryReceipt> salaryReceipts = new HashSet<>();
+    @Column(name = "irs_table")
+    private Integer irsTable;
+
+    @Column(name = "status")
+    private String status;
 } 

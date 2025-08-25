@@ -24,7 +24,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     
     Page<Employee> findByCompanyId(Integer companyId, Pageable pageable);
     
-    @Query("SELECT e FROM Employee e WHERE e.company.id = :companyId " +
+    @Query("SELECT e FROM Employee e WHERE e.companyId = :companyId " +
            "AND (LOWER(e.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(e.taxId) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
@@ -36,6 +36,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
     
     boolean existsBySocialSecurityId(String socialSecurityId);
     
-    @Query("SELECT COUNT(e) FROM Employee e WHERE e.company.id = :companyId")
+    @Query("SELECT COUNT(e) FROM Employee e WHERE e.companyId = :companyId")
     long countByCompanyId(@Param("companyId") Integer companyId);
 } 

@@ -87,7 +87,7 @@ public class CompanySelectionController {
         }
 
         try {
-            // Find the company in the database to get the correct database file name
+            // Find the company in the database to get the company ID
             Company selectedCompany = null;
             try {
                 // Try to find by name first
@@ -99,26 +99,10 @@ public class CompanySelectionController {
                 System.out.println("Error finding company by name: " + e.getMessage());
             }
 
-            // If not found in database, try file-based approach
+            // If not found in database, show error
             if (selectedCompany == null) {
-                // Find the database file for the selected company
-                File dataDir = new File("./data");
-                String dbFileName = selectedCompanyName + ".db";
-                File dbFile = new File(dataDir, dbFileName);
-
-                if (!dbFile.exists()) {
-                    showError("Error", "Company database not found.");
-                    return;
-                }
-
-                // Set the database URL for this company
-                System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dbFile.getAbsolutePath());
-            } else {
-                // Use the company's database file
-                String dbFileName = selectedCompany.getName().replaceAll("[^a-zA-Z0-9]", "_") + ".db";
-                File dataDir = new File("./data");
-                File dbFile = new File(dataDir, dbFileName);
-                System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dbFile.getAbsolutePath());
+                showError("Error", "Company not found in database.");
+                return;
             }
             
             // Load the main menu
@@ -128,6 +112,7 @@ public class CompanySelectionController {
             
             MainMenuController controller = loader.getController();
             controller.setCompanyName(selectedCompanyName);
+            controller.setCompanyId(selectedCompany.getId());
             
             Scene scene = new Scene(root, 1200, 800);
             scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());

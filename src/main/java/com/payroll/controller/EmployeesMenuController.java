@@ -58,13 +58,13 @@ public class EmployeesMenuController {
     private TableColumn<Employee, String> socialSecurityIdColumn;
     
     @FXML
-    private TableColumn<Employee, LocalDate> dateOfBirthColumn;
+    private TableColumn<Employee, String> dateOfBirthColumn;
     
     @FXML
     private TableColumn<Employee, BigDecimal> baseSalaryColumn;
     
     @FXML
-    private TableColumn<Employee, LocalDate> hireDateColumn;
+    private TableColumn<Employee, String> hireDateColumn;
     
     @FXML
     private TableColumn<Employee, Integer> dependentsColumn;
@@ -88,6 +88,7 @@ public class EmployeesMenuController {
     private TextField searchField;
 
     private String companyName;
+    private Integer companyId;
     private ObservableList<Employee> employeesList;
     private FilteredList<Employee> filteredEmployees;
 
@@ -102,7 +103,18 @@ public class EmployeesMenuController {
         if (companyNameText != null) {
             companyNameText.setText(companyName);
         }
-        loadEmployees();
+        // If companyId is already set, load employees immediately
+        if (this.companyId != null) {
+            loadEmployees();
+        }
+    }
+    
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
+        // Load employees after both company name and ID are set
+        if (this.companyName != null && this.companyId != null) {
+            loadEmployees();
+        }
     }
 
     private void setupTable() {
@@ -133,26 +145,44 @@ public class EmployeesMenuController {
         });
         
         // Format date columns
-        hireDateColumn.setCellFactory(column -> new TableCell<Employee, LocalDate>() {
+        hireDateColumn.setCellFactory(column -> new TableCell<Employee, String>() {
             @Override
-            protected void updateItem(LocalDate item, boolean empty) {
+            protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) {
+                if (empty || item == null || item.isEmpty()) {
                     setText(null);
                 } else {
-                    setText(item.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    try {
+                        LocalDate date = parseDate(item);
+                        if (date != null) {
+                            setText(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                        } else {
+                            setText(item); // Display as-is if parsing fails
+                        }
+                    } catch (Exception e) {
+                        setText(item); // Display as-is if parsing fails
+                    }
                 }
             }
         });
         
-        dateOfBirthColumn.setCellFactory(column -> new TableCell<Employee, LocalDate>() {
+        dateOfBirthColumn.setCellFactory(column -> new TableCell<Employee, String>() {
             @Override
-            protected void updateItem(LocalDate item, boolean empty) {
+            protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) {
+                if (empty || item == null || item.isEmpty()) {
                     setText(null);
                 } else {
-                    setText(item.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                    try {
+                        LocalDate date = parseDate(item);
+                        if (date != null) {
+                            setText(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+                        } else {
+                            setText(item); // Display as-is if parsing fails
+                        }
+                    } catch (Exception e) {
+                        setText(item); // Display as-is if parsing fails
+                    }
                 }
             }
         });
@@ -209,14 +239,47 @@ public class EmployeesMenuController {
         });
     }
 
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        
+        // Try different date formats
+        String[] formats = {
+            "yyyy-MM-dd",      // ISO format
+            "dd-MM-yyyy",      // European format with dashes
+            "dd/MM/yyyy",      // European format with slashes
+            "MM/dd/yyyy",      // US format
+            "yyyy/MM/dd"       // ISO format with slashes
+        };
+        
+        for (String format : formats) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                return LocalDate.parse(dateStr, formatter);
+            } catch (Exception e) {
+                // Continue to next format
+            }
+        }
+        
+        return null; // Could not parse with any format
+    }
+    
+    public void refreshEmployees() {
+        loadEmployees();
+    }
+    
     private void loadEmployees() {
         try {
-            List<Employee> employees = employeeService.getAllEmployees();
-            employeesList.clear();
-            employeesList.addAll(employees);
-            
-            updateStatus("Loaded " + employees.size() + " employees", "success");
-            
+            if (companyId != null) {
+                List<Employee> employees = employeeService.getEmployeesByCompany(companyId);
+                employeesList.clear();
+                employeesList.addAll(employees);
+                
+                updateStatus("Loaded " + employees.size() + " employees", "success");
+            } else {
+                updateStatus("Company ID not set", "error");
+            }
         } catch (Exception e) {
             updateStatus("Error loading employees: " + e.getMessage(), "error");
         }
@@ -272,6 +335,32 @@ public class EmployeesMenuController {
             
         } catch (Exception e) {
             showError("Error", "Failed to open add employee dialog: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void showRemunerationManagement() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/RemunerationManagement.fxml"));
+            loader.setControllerFactory(applicationContext::getBean);
+            Parent root = loader.load();
+            
+            RemunerationManagementController controller = loader.getController();
+            controller.setCompanyName(companyName);
+            controller.setCompanyId(companyId);
+            
+            Scene scene = new Scene(root, 800, 900);
+            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
+            
+            Stage stage = new Stage();
+            stage.setTitle("Remuneration Management - " + companyName);
+            stage.setScene(scene);
+            stage.setResizable(false);
+            
+            stage.show();
+            
+        } catch (Exception e) {
+            showError("Error", "Failed to open remuneration management: " + e.getMessage());
         }
     }
 
@@ -344,9 +433,7 @@ public class EmployeesMenuController {
         }
     }
 
-    public void refreshEmployees() {
-        Platform.runLater(this::loadEmployees);
-    }
+
 
     private void updateStatus(String message, String type) {
         if (statusText != null) {

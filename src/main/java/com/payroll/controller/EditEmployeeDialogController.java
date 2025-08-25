@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Component
 @RequiredArgsConstructor
@@ -98,12 +99,37 @@ public class EditEmployeeDialogController {
             emailField.setText(employee.getEmail() != null ? employee.getEmail() : "");
             phoneField.setText(employee.getPhone() != null ? employee.getPhone() : "");
             baseSalaryField.setText(employee.getBaseSalary().toString());
-            hireDatePicker.setValue(employee.getHireDate());
+            
+            // Convert String hire date to LocalDate for DatePicker
+            if (employee.getHireDate() != null && !employee.getHireDate().isEmpty()) {
+                try {
+                    LocalDate hireDate = parseDate(employee.getHireDate());
+                    if (hireDate != null) {
+                        hireDatePicker.setValue(hireDate);
+                    } else {
+                        hireDatePicker.setValue(LocalDate.now());
+                    }
+                } catch (Exception e) {
+                    // If parsing fails, set to current date
+                    hireDatePicker.setValue(LocalDate.now());
+                }
+            }
+            
             dependentsField.setText(String.valueOf(employee.getDependents()));
             
-            // Set date of birth
-            if (employee.getDateOfBirth() != null) {
-                dateOfBirthPicker.setValue(employee.getDateOfBirth());
+            // Set date of birth - convert String to LocalDate
+            if (employee.getDateOfBirth() != null && !employee.getDateOfBirth().isEmpty()) {
+                try {
+                    LocalDate dateOfBirth = parseDate(employee.getDateOfBirth());
+                    if (dateOfBirth != null) {
+                        dateOfBirthPicker.setValue(dateOfBirth);
+                    } else {
+                        dateOfBirthPicker.setValue(null);
+                    }
+                } catch (Exception e) {
+                    // If parsing fails, leave empty
+                    dateOfBirthPicker.setValue(null);
+                }
             }
             
             // Set familiar situation
@@ -158,7 +184,7 @@ public class EditEmployeeDialogController {
             
             // Set date of birth
             if (dateOfBirthPicker.getValue() != null) {
-                employee.setDateOfBirth(dateOfBirthPicker.getValue());
+                employee.setDateOfBirth(dateOfBirthPicker.getValue().toString());
             }
             
             // Parse salary
@@ -170,7 +196,7 @@ public class EditEmployeeDialogController {
                 return;
             }
             
-            employee.setHireDate(hireDatePicker.getValue());
+            employee.setHireDate(hireDatePicker.getValue().toString());
             
             // Parse dependents
             if (!dependentsField.getText().trim().isEmpty()) {
@@ -237,6 +263,32 @@ public class EditEmployeeDialogController {
     private void cancel() {
         Stage stage = (Stage) firstNameField.getScene().getWindow();
         stage.close();
+    }
+
+    private LocalDate parseDate(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        
+        // Try different date formats
+        String[] formats = {
+            "yyyy-MM-dd",      // ISO format
+            "dd-MM-yyyy",      // European format with dashes
+            "dd/MM/yyyy",      // European format with slashes
+            "MM/dd/yyyy",      // US format
+            "yyyy/MM/dd"       // ISO format with slashes
+        };
+        
+        for (String format : formats) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+                return LocalDate.parse(dateStr, formatter);
+            } catch (Exception e) {
+                // Continue to next format
+            }
+        }
+        
+        return null; // Could not parse with any format
     }
 
     private void showError(String title, String message) {

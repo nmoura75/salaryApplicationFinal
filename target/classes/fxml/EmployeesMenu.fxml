@@ -25,6 +25,7 @@
     <HBox spacing="20" alignment="CENTER_LEFT">
         <TextField fx:id="searchField" promptText="Search employees..." prefWidth="300"/>
         <Button text="Add New Employee" onAction="#showAddEmployeeDialog" styleClass="primary-button"/>
+        <Button text="Manage Remunerations" onAction="#showRemunerationManagement" styleClass="secondary-button"/>
     </HBox>
 
     <!-- Employees Table -->

@@ -24,21 +24,20 @@ public class SalaryReceiptService {
     private final EmployeeRepository employeeRepository;
 
     @Transactional
-    public SalaryReceipt generateSalaryReceipt(Integer employeeId, String month, Integer year,
-                                              BigDecimal overtime, BigDecimal bonus,
-                                              BigDecimal mealAllowance, BigDecimal transportAllowance,
-                                              BigDecimal otherAllowances, String notes) {
+    public SalaryReceipt createSalaryReceipt(Integer employeeId, String month, Integer year,
+                                            BigDecimal overtime, BigDecimal bonus,
+                                            BigDecimal mealAllowance, BigDecimal transportAllowance,
+                                            BigDecimal otherAllowances, String notes) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
-        // Check if receipt already exists for this month
         if (salaryReceiptRepository.existsByEmployeeIdAndMonthAndYear(employeeId, month, year)) {
             throw new IllegalStateException("Salary receipt already exists for this month");
         }
 
         SalaryReceipt receipt = new SalaryReceipt();
-        receipt.setEmployee(employee);
-        receipt.setPaymentDate(LocalDate.now());
+        receipt.setEmployeeId(employeeId);
+        receipt.setPaymentDate(LocalDate.now().toString());
         receipt.setMonth(month);
         receipt.setYear(year);
         receipt.setBaseSalary(employee.getBaseSalary());
@@ -49,7 +48,7 @@ public class SalaryReceiptService {
         receipt.setOtherAllowances(otherAllowances != null ? otherAllowances : BigDecimal.ZERO);
         receipt.setNotes(notes);
 
-        calculateSalaryReceiptAmounts(receipt);
+        calculateSalaryReceiptAmounts(receipt, employee);
 
         return salaryReceiptRepository.save(receipt);
     }
@@ -61,6 +60,10 @@ public class SalaryReceiptService {
         SalaryReceipt receipt = salaryReceiptRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Salary receipt not found"));
 
+        // Get the employee to pass to calculateSalaryReceiptAmounts
+        Employee employee = employeeRepository.findById(receipt.getEmployeeId())
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
+
         receipt.setOvertime(overtime != null ? overtime : BigDecimal.ZERO);
         receipt.setBonus(bonus != null ? bonus : BigDecimal.ZERO);
         receipt.setMealAllowance(mealAllowance != null ? mealAllowance : BigDecimal.ZERO);
@@ -68,7 +71,7 @@ public class SalaryReceiptService {
         receipt.setOtherAllowances(otherAllowances != null ? otherAllowances : BigDecimal.ZERO);
         receipt.setNotes(notes);
 
-        calculateSalaryReceiptAmounts(receipt);
+        calculateSalaryReceiptAmounts(receipt, employee);
 
         return salaryReceiptRepository.save(receipt);
     }
@@ -93,7 +96,7 @@ public class SalaryReceiptService {
         return salaryReceiptRepository.findByCompanyId(companyId, pageable);
     }
 
-    private void calculateSalaryReceiptAmounts(SalaryReceipt receipt) {
+    private void calculateSalaryReceiptAmounts(SalaryReceipt receipt, Employee employee) {
         // Calculate gross amount (base salary + extras)
         BigDecimal grossAmount = receipt.getBaseSalary()
                 .add(receipt.getOvertime())
@@ -108,7 +111,7 @@ public class SalaryReceiptService {
         receipt.setSocialSecurityContribution(socialSecurityContribution);
 
         // Calculate income tax (based on gross amount)
-        BigDecimal incomeTax = calculateIncomeTax(grossAmount, receipt.getEmployee());
+        BigDecimal incomeTax = calculateIncomeTax(grossAmount, employee);
         receipt.setIncomeTax(incomeTax);
 
         // Calculate net amount

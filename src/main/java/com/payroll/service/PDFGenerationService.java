@@ -19,12 +19,16 @@ import java.util.HashMap;
 public class PDFGenerationService {
 
     private final SalaryReceiptService salaryReceiptService;
+    private final EmployeeService employeeService;
+    private final CompanyService companyService;
 
     public byte[] generateSalaryReceiptPDF(Integer receiptId) throws Exception {
         // Get the salary receipt
         SalaryReceipt receipt = salaryReceiptService.getSalaryReceiptById(receiptId);
-        Employee employee = receipt.getEmployee();
-        Company company = employee.getCompany();
+        
+        // Get the employee and company using the employeeId
+        Employee employee = employeeService.getEmployeeById(receipt.getEmployeeId());
+        Company company = companyService.getCompanyById(employee.getCompanyId());
 
         // Create the DTO with all the data needed for the report
         SalaryReceiptReportDTO reportData = SalaryReceiptReportDTO.builder()
@@ -76,13 +80,13 @@ public class PDFGenerationService {
         // Convert each receipt to DTO
         var reportDataList = receipts.stream()
                 .map(receipt -> {
-                    Employee employee = receipt.getEmployee();
-                    Company company = employee.getCompany();
+                    // Get the employee using the employeeId
+                    Employee employee = employeeService.getEmployeeById(receipt.getEmployeeId());
                     
                     return SalaryReceiptReportDTO.builder()
-                            .companyName(company.getName())
-                            .companyTaxId(company.getTaxId())
-                            .companyAddress(company.getAddress())
+                            .companyName(companyService.getCompanyById(employee.getCompanyId()).getName())
+                            .companyTaxId(companyService.getCompanyById(employee.getCompanyId()).getTaxId())
+                            .companyAddress(companyService.getCompanyById(employee.getCompanyId()).getAddress())
                             .employeeName(employee.getFirstName() + " " + employee.getLastName())
                             .employeeTaxId(employee.getTaxId())
                             .month(receipt.getMonth())

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="20" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.payroll.controller.RemunerationManagementController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Text text="Employee Remuneration Management" styleClass="title"/>
+        <Button fx:id="backButton" text="← Back to Employees" onAction="#goBackToEmployees" styleClass="back-button"/>
+    </HBox>
+
+    <!-- Company Name Display -->
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Label fx:id="companyNameText" styleClass="label subtitle"/>
+    </HBox>
+
+    <!-- Employee Selection -->
+    <HBox spacing="20" alignment="CENTER_LEFT">
+        <Label text="Select Employee:" styleClass="label"/>
+        <ComboBox fx:id="employeeComboBox" prefWidth="300" promptText="Choose an employee..."/>
+        <Button text="Load Remunerations" onAction="#loadEmployeeRemunerations" styleClass="primary-button"/>
+    </HBox>
+
+    <!-- Remuneration Categories and Values -->
+    <VBox fx:id="remunerationContainer" spacing="15" visible="false">
+        <Text text="Default Remunerations" styleClass="subtitle"/>
+        
+        <!-- Meal Allowance Section -->
+        <VBox styleClass="card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Meal Allowance (Daily):" styleClass="label"/>
+                <TextField fx:id="mealAllowanceField" promptText="Daily amount" prefWidth="150"/>
+                <Label text="€/day" styleClass="label"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Notes:" styleClass="label"/>
+                <TextField fx:id="mealAllowanceNotes" promptText="Optional notes" prefWidth="300"/>
+            </HBox>
+        </VBox>
+
+        <!-- Christmas Bonus Section -->
+        <VBox styleClass="card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Christmas Bonus (Monthly):" styleClass="label"/>
+                <TextField fx:id="christmasBonusField" promptText="Monthly amount" prefWidth="150"/>
+                <Label text="€/month" styleClass="label"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Notes:" styleClass="label"/>
+                <TextField fx:id="christmasBonusNotes" promptText="Optional notes" prefWidth="300"/>
+            </HBox>
+        </VBox>
+
+        <!-- Vacation Subsidy Section -->
+        <VBox styleClass="card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Vacation Subsidy (Monthly):" styleClass="label"/>
+                <TextField fx:id="vacationSubsidyField" promptText="Monthly amount" prefWidth="150"/>
+                <Label text="€/month" styleClass="label"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Notes:" styleClass="label"/>
+                <TextField fx:id="vacationSubsidyNotes" promptText="Optional notes" prefWidth="300"/>
+            </HBox>
+        </VBox>
+
+        <!-- Transport Allowance Section -->
+        <VBox styleClass="card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Transport Allowance (Monthly):" styleClass="label"/>
+                <TextField fx:id="transportAllowanceField" promptText="Monthly amount" prefWidth="150"/>
+                <Label text="€/month" styleClass="label"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Notes:" styleClass="label"/>
+                <TextField fx:id="transportAllowanceNotes" promptText="Optional notes" prefWidth="300"/>
+            </HBox>
+        </VBox>
+
+        <!-- Save Button -->
+        <HBox spacing="20" alignment="CENTER_LEFT">
+            <Button text="Save Default Remunerations" onAction="#saveDefaultRemunerations" styleClass="primary-button"/>
+            <Label fx:id="statusText" styleClass="status-text"/>
+        </HBox>
+    </VBox>
+
+    <!-- Status Bar -->
+    <Text fx:id="statusText" styleClass="status-text"/>
+</VBox>

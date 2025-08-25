@@ -26,14 +26,13 @@ public class EmployeeService {
     public Employee createEmployee(Employee employee) {
         validateNewEmployee(employee);
         
-        // Ensure company exists and is properly set
-        Company company = employee.getCompany();
-        if (company == null || company.getId() == null) {
-            throw new IllegalArgumentException("Company must be set for employee");
+        // Ensure company ID is properly set
+        if (employee.getCompanyId() == null) {
+            throw new IllegalArgumentException("Company ID must be set for employee");
         }
         
         // Verify company exists in database
-        companyRepository.findById(company.getId())
+        companyRepository.findById(employee.getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Company not found"));
 
         // Calculate initial contributions and net salary

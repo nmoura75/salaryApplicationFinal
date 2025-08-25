@@ -15,34 +15,34 @@ import java.util.Optional;
 @Repository
 public interface SalaryReceiptRepository extends JpaRepository<SalaryReceipt, Integer> {
 
-    @Query("SELECT sr FROM SalaryReceipt sr WHERE sr.employee.firstName = :firstName")
+    @Query("SELECT sr FROM SalaryReceipt sr JOIN Employee e ON sr.employeeId = e.id WHERE e.firstName = :firstName")
     Optional<SalaryReceipt> findByEmployeeFirstName(@Param("firstName") String firstName);
     
     List<SalaryReceipt> findByEmployeeId(Integer employeeId);
     
     Page<SalaryReceipt> findByEmployeeId(Integer employeeId, Pageable pageable);
     
-    @Query("SELECT sr FROM SalaryReceipt sr WHERE sr.employee.company.id = :companyId")
+    @Query("SELECT sr FROM SalaryReceipt sr JOIN Employee e ON sr.employeeId = e.id WHERE e.companyId = :companyId")
     List<SalaryReceipt> findByCompanyId(@Param("companyId") Integer companyId);
     
-    @Query("SELECT sr FROM SalaryReceipt sr WHERE sr.employee.company.id = :companyId")
+    @Query("SELECT sr FROM SalaryReceipt sr JOIN Employee e ON sr.employeeId = e.id WHERE e.companyId = :companyId")
     Page<SalaryReceipt> findByCompanyId(@Param("companyId") Integer companyId, Pageable pageable);
     
     Optional<SalaryReceipt> findByEmployeeIdAndMonthAndYear(Integer employeeId, String month, Integer year);
     
-    @Query("SELECT sr FROM SalaryReceipt sr WHERE sr.employee.company.id = :companyId " +
+    @Query("SELECT sr FROM SalaryReceipt sr JOIN Employee e ON sr.employeeId = e.id WHERE e.companyId = :companyId " +
            "AND sr.month = :month AND sr.year = :year")
     List<SalaryReceipt> findByCompanyIdAndMonthAndYear(
             @Param("companyId") Integer companyId,
             @Param("month") String month,
             @Param("year") Integer year);
     
-    @Query("SELECT sr FROM SalaryReceipt sr WHERE sr.employee.company.id = :companyId " +
+    @Query("SELECT sr FROM SalaryReceipt sr JOIN Employee e ON sr.employeeId = e.id WHERE e.companyId = :companyId " +
            "AND sr.paymentDate BETWEEN :startDate AND :endDate")
     List<SalaryReceipt> findByCompanyIdAndPaymentDateBetween(
             @Param("companyId") Integer companyId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
+            @Param("startDate") String startDate,
+            @Param("endDate") String endDate);
     
     boolean existsByEmployeeIdAndMonthAndYear(Integer employeeId, String month, Integer year);
 } 

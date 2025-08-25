@@ -34,6 +34,7 @@ public class MainMenuController {
     private Button backButton;
 
     private String companyName;
+    private Integer companyId;
 
     @FXML
     public void initialize() {
@@ -45,6 +46,10 @@ public class MainMenuController {
         if (companyNameText != null) {
             companyNameText.setText(companyName);
         }
+    }
+    
+    public void setCompanyId(Integer companyId) {
+        this.companyId = companyId;
     }
 
     private void createMenuCards() {
@@ -131,6 +136,7 @@ public class MainMenuController {
             
             EmployeesMenuController controller = loader.getController();
             controller.setCompanyName(companyName);
+            controller.setCompanyId(companyId);
             
             Scene scene = new Scene(root, 1200, 800);
             scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());

@@ -47,9 +47,6 @@ public class AddEmployeeDialogController {
     private TextField phoneField;
     
     @FXML
-    private TextField addressField;
-    
-    @FXML
     private TextField baseSalaryField;
     
     @FXML
@@ -66,24 +63,36 @@ public class AddEmployeeDialogController {
     
     @FXML
     private ComboBox<String> statusComboBox;
+    
+    @FXML
+    private TextField positionField;
+    
+    @FXML
+    private TextField departmentField;
 
     private EmployeesMenuController parentController;
     private String companyName;
 
     @FXML
     public void initialize() {
-        // Set default values
-        hireDatePicker.setValue(LocalDate.now());
-        
-        // Initialize ComboBox options
-        familiarSituationComboBox.getItems().addAll("Single", "Married", "Divorced", "Widowed");
-        irsTableComboBox.getItems().addAll("Table 1", "Table 2", "Table 3", "Table 4", "Table 5", "Table 6");
-        statusComboBox.getItems().addAll("ACTIVE", "INACTIVE");
-        
-        // Set default selections
-        familiarSituationComboBox.getSelectionModel().selectFirst();
-        irsTableComboBox.getSelectionModel().selectFirst();
-        statusComboBox.getSelectionModel().selectFirst();
+        try {
+            // Set default values - use try-catch to handle any date parsing issues
+            hireDatePicker.setValue(LocalDate.now());
+            
+            // Initialize ComboBox options
+            familiarSituationComboBox.getItems().addAll("Single", "Married", "Divorced", "Widowed");
+            irsTableComboBox.getItems().addAll("Table 1", "Table 2", "Table 3", "Table 4", "Table 5", "Table 6");
+            statusComboBox.getItems().addAll("ACTIVE", "INACTIVE");
+            
+            // Set default selections
+            familiarSituationComboBox.getSelectionModel().selectFirst();
+            irsTableComboBox.getSelectionModel().selectFirst();
+            statusComboBox.getSelectionModel().selectFirst();
+            
+        } catch (Exception e) {
+            // Log any initialization errors but don't crash the dialog
+            System.err.println("Error initializing AddEmployeeDialog: " + e.getMessage());
+        }
     }
 
     public void setParentController(EmployeesMenuController parentController) {
@@ -98,38 +107,38 @@ public class AddEmployeeDialogController {
     }
 
     @FXML
-    private void addEmployee() {
+    private void saveEmployee() {
         try {
             // Validate required fields
             if (firstNameField.getText().trim().isEmpty() || 
-                lastNameField.getText().trim().isEmpty() ||
-                taxIdField.getText().trim().isEmpty() ||
+                lastNameField.getText().trim().isEmpty() || 
+                taxIdField.getText().trim().isEmpty() || 
                 socialSecurityIdField.getText().trim().isEmpty() ||
                 baseSalaryField.getText().trim().isEmpty() ||
                 hireDatePicker.getValue() == null) {
                 
-                showError("Validation Error", "Please fill in all required fields (*).");
+                showError("Validation Error", "Please fill in all required fields.");
                 return;
             }
-
-            // Create employee
+            
+            // Create employee object
             Employee employee = new Employee();
             employee.setFirstName(firstNameField.getText().trim());
             employee.setLastName(lastNameField.getText().trim());
             employee.setTaxId(taxIdField.getText().trim());
             employee.setSocialSecurityId(socialSecurityIdField.getText().trim());
-            employee.setEmail(emailField.getText().trim());
-            employee.setPhone(phoneField.getText().trim());
-            employee.setPosition(""); // Default value
-            employee.setDepartment(""); // Default value
-            employee.setBankAccount(""); // Default value
             
-            // Set date of birth
+            // Set date of birth if selected
             if (dateOfBirthPicker.getValue() != null) {
-                employee.setDateOfBirth(dateOfBirthPicker.getValue());
+                employee.setDateOfBirth(dateOfBirthPicker.getValue().toString());
             }
             
-            // Parse salary
+            employee.setEmail(emailField.getText().trim());
+            employee.setPhone(phoneField.getText().trim());
+            employee.setPosition(positionField.getText().trim());
+            employee.setDepartment(departmentField.getText().trim());
+            
+            // Parse and set base salary
             try {
                 BigDecimal salary = new BigDecimal(baseSalaryField.getText().trim());
                 employee.setBaseSalary(salary);
@@ -138,7 +147,10 @@ public class AddEmployeeDialogController {
                 return;
             }
             
-            employee.setHireDate(hireDatePicker.getValue());
+            // Convert LocalDate to String for hire date
+            if (hireDatePicker.getValue() != null) {
+                employee.setHireDate(hireDatePicker.getValue().toString());
+            }
             
             // Parse dependents
             if (!dependentsField.getText().trim().isEmpty()) {
@@ -185,12 +197,18 @@ public class AddEmployeeDialogController {
             employee.setStatus(status != null ? status : "ACTIVE");
             
             employee.setUsefulDaysOfWork(22); // Default value
-
-            // Set company
+            
+            // Set required contribution fields with default values
+            employee.setSocialSecurityContribution(BigDecimal.ZERO);
+            employee.setTaxIdContribution(BigDecimal.ZERO);
+            employee.setTotalContributions(BigDecimal.ZERO);
+            employee.setNetSalary(employee.getBaseSalary()); // Initially net salary equals base salary
+            
+            // Set company ID instead of Company object
             if (companyName != null && !companyName.trim().isEmpty()) {
                 try {
                     Company company = companyService.getCompanyByName(companyName);
-                    employee.setCompany(company);
+                    employee.setCompanyId(company.getId());
                 } catch (Exception e) {
                     showError("Error", "Failed to find company: " + e.getMessage());
                     return;

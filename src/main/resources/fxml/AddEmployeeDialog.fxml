@@ -64,10 +64,7 @@
                 </VBox>
             </HBox>
             
-            <VBox spacing="5">
-                <Label text="Address" styleClass="label"/>
-                <TextField fx:id="addressField" promptText="Enter address"/>
-            </VBox>
+
         </VBox>
         
         <!-- Employment Information -->
@@ -82,6 +79,17 @@
                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                     <Label text="Hire Date *" styleClass="label"/>
                     <DatePicker fx:id="hireDatePicker"/>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Position" styleClass="label"/>
+                    <TextField fx:id="positionField" promptText="Enter position"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Department" styleClass="label"/>
+                    <TextField fx:id="departmentField" promptText="Enter department"/>
                 </VBox>
             </HBox>
             
@@ -112,7 +120,7 @@
     <!-- Buttons -->
     <HBox spacing="15" alignment="CENTER">
         <Button text="Cancel" styleClass="button secondary" onAction="#cancel"/>
-        <Button text="Add Employee" styleClass="button" onAction="#addEmployee"/>
+        <Button text="Add Employee" styleClass="button" onAction="#saveEmployee"/>
     </HBox>
     
 </VBox>
