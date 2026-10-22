@@ -1,0 +1,108 @@
+
+i want to add the last version of javafx so what I need to do 
+
+wsl
+install docker engine
+docker postgres
+
+changed for sqlite
+https://dbeaver.com/docs/dbeaver/Database-driver-SQLite/#general-sqlite-connection-settings
+
+i want to implement a java fx menu with a ios feeling. it's possible?
+
+
+
+
+want to build a stand alone account application using
+java as the main language
+postgres sql as the main database
+javafx as the front end with a feeling of ios 
+this application should be organized by company and for each company should have a proper database
+for each company i need a general ledger, a default set of accounts according with the portuguese accountant standards
+the application needs to have the possibility to add accounts
+the accountant register should be by debit and credit accounts
+also needs to add a functionality to obtain invoices from suppliers from the portuguese SAFT and do the proper register in general ledger according with the rules defined for each supplier
+I need to be able to print a general ledger by month or year both in PDF and excel
+I need also the availability to analyse different moviments 
+
+
+
+
+java.sql.SQLException: path to './data/salary_calculator.db': 'G:\Other computers\O meu Portátil\clientes 5nov18\_outros\nuno\formações_projetos\codigo_intellij test\salary-calculator_cursor2\.\data' does not exist
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+changed the database from postgres to sqlite due to being a better embeded db for standalone application. can you review in order to verify if everything is ok with the change?
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+can we start with the JAVA FX implementation with a feeling of IOS?
+I want a first menu to select a company or create a new company (each company should have a diferent db file)
+then for this company i want a box for menu employees, a box for salary preparation, a box for salary processing, a box for salary consulting, a box for government maps
+in menu employees i want to add employess, consult employees, change employees
+in menu salary preparation I want to select month (by default shoud appear the next month than the one we are), a box for automatic processing giving the useful days of work of the month, and a box to acces all the employees to see the salary of month in order to change anything if needed
+in the salary processing menu i want the options to select month and create the receipts of the month
+
+
+internal note: 
+need to create a field useful days of work that should be open and needed to be filled in order to do a first automatic salary preparation
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+The foundation is now complete! Would you like me to continue with:
+Employees Menu Implementation - Add, consult, and change employees
+Salary Preparation Screen - Month selection and automatic processing
+Salary Processing Screen - Generate receipts for selected month
+Salary Consulting Screen - View and export reports
+Government Maps Screen - Generate government reports
+Which section would you like me to implement next?
+
++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+add remunerations types for employess (sub de refeição, sub de natal, sub de férias, comissões, premios etc...)
+
+
+start menu of salary preparation. I want to show all the active employess and to create a method to prepare the receipts of the month giving the already remuneration types available for the employee, the main calculation is the sub de refeição according with the day value and the number of useful days)
+
+
+
+
+DROP TABLE IF EXISTS salary_receipts;
+DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS companies;
+DROP TABLE IF EXISTS flyway_schema_history;
+
+
+to do future developments
+adapt to madeira and açores region
+adapt to deficientes taxes
+
+
+xxxxxxxx20ago25
+What to Build Next:
+Salary Preparation Screen:
+Month/year selection
+Business days configuration
+Monthly remuneration overrides
+Salary preview
+Enhanced Salary Processing:
+Include remuneration calculations
+Generate detailed receipts
+
+*** real standalone build uses jlink or jpackage
+
+set java home to jdk17
+$env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
+
+mvn clean
+mvn compile
+mvn javafx:run
+
+
+
+
+
+
+
+
+ 

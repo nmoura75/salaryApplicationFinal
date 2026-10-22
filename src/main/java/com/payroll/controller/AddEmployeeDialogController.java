@@ -81,7 +81,13 @@ public class AddEmployeeDialogController {
             
             // Initialize ComboBox options
             familiarSituationComboBox.getItems().addAll("Single", "Married", "Divorced", "Widowed");
-            irsTableComboBox.getItems().addAll("Table 1", "Table 2", "Table 3", "Table 4", "Table 5", "Table 6");
+            irsTableComboBox.getItems().addAll("Não casado sem dependentes ou casado 2 titulares",
+                    "Não casado com um ou mais dependentes",
+                    "Casado, único titular",
+                    "Não casado ou casado dois titulares sem dependentes - Pessoa com deficiência",
+                    "Não casado com um ou mais dependentes - Pessoa com deficiência",
+                    "Casado dois titulares com um ou mais dependentes - Pessoa com deficiência",
+                    "Casado, único titular - Pessoa com deficiência");
             statusComboBox.getItems().addAll("ACTIVE", "INACTIVE");
             
             // Set default selections
