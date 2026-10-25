@@ -84,13 +84,22 @@
             </HBox>
         </VBox>
 
+        <VBox styleClass="card" spacing="10">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Commission (Percentage of base salary):" styleClass="label"/>
+                <TextField fx:id="commissionField" promptText="Percent" prefWidth="150"/>
+                <Label text="%" styleClass="label"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Label text="Notes:" styleClass="label"/>
+                <TextField fx:id="commissionNotes" promptText="Optional notes" prefWidth="300"/>
+            </HBox>
+        </VBox>
+
         <!-- Save Button -->
         <HBox spacing="20" alignment="CENTER_LEFT">
             <Button text="Save Default Remunerations" onAction="#saveDefaultRemunerations" styleClass="primary-button"/>
             <Label fx:id="statusText" styleClass="status-text"/>
         </HBox>
     </VBox>
-
-    <!-- Status Bar -->
-    <Text fx:id="statusText" styleClass="status-text"/>
 </VBox>

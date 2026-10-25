@@ -1,5 +1,6 @@
 package com.payroll.controller;
 
+import com.payroll.service.CompanyService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -20,6 +21,8 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class MainMenuController {
+
+    private final CompanyService companyService;
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -112,6 +115,7 @@ public class MainMenuController {
     @FXML
     private void goBackToCompanySelection() {
         try {
+            companyService.closeCompany();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/CompanySelection.fxml"));
             loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
@@ -135,8 +139,8 @@ public class MainMenuController {
             Parent root = loader.load();
             
             EmployeesMenuController controller = loader.getController();
-            controller.setCompanyName(companyName);
             controller.setCompanyId(companyId);
+            controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);
             scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
@@ -157,6 +161,7 @@ public class MainMenuController {
             Parent root = loader.load();
             
             SalaryPreparationController controller = loader.getController();
+            controller.setCompanyId(companyId);
             controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);
@@ -178,6 +183,7 @@ public class MainMenuController {
             Parent root = loader.load();
             
             SalaryProcessingController controller = loader.getController();
+            controller.setCompanyId(companyId);
             controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);
@@ -199,6 +205,7 @@ public class MainMenuController {
             Parent root = loader.load();
             
             SalaryConsultingController controller = loader.getController();
+            controller.setCompanyId(companyId);
             controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);
@@ -220,6 +227,7 @@ public class MainMenuController {
             Parent root = loader.load();
             
             GovernmentMapsController controller = loader.getController();
+            controller.setCompanyId(companyId);
             controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);

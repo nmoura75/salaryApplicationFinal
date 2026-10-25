@@ -346,8 +346,8 @@ public class EmployeesMenuController {
             Parent root = loader.load();
             
             RemunerationManagementController controller = loader.getController();
-            controller.setCompanyName(companyName);
             controller.setCompanyId(companyId);
+            controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 800, 900);
             scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
@@ -419,6 +419,7 @@ public class EmployeesMenuController {
             Parent root = loader.load();
             
             MainMenuController controller = loader.getController();
+            controller.setCompanyId(companyId);
             controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);

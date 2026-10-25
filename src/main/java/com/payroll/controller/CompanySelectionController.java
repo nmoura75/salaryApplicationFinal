@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
-import java.io.File;
 import java.util.List;
 
 @Component
@@ -39,42 +38,13 @@ public class CompanySelectionController {
 
     private void loadCompanies() {
         companyComboBox.getItems().clear();
-        
         try {
-            // Query companies from the database
             List<Company> companies = companyService.getAllCompanies();
             for (Company company : companies) {
                 companyComboBox.getItems().add(company.getName());
             }
-            
-            System.out.println("Found " + companies.size() + " companies in database");
-        } catch (Exception e) {
-            System.out.println("Error loading companies from database: " + e.getMessage());
-            // Fallback to file-based approach if database query fails
-            loadCompaniesFromFiles();
-        }
-        
-        // Set default selection if companies exist
-       /* if (!companyComboBox.getItems().isEmpty()) {
-            companyComboBox.getSelectionModel().selectFirst();
-        }*/
-    }
-
-    private void loadCompaniesFromFiles() {
-        // Fallback method to load companies from database files
-        File dataDir = new File("./data");
-        if (dataDir.exists()) {
-            File[] dbFiles = dataDir.listFiles((dir, name) -> name.endsWith(".db"));
-            if (dbFiles != null) {
-                for (File dbFile : dbFiles) {
-                    String companyName = dbFile.getName().replace(".db", "");
-                    // Only add if not already in the list
-                    if (!companyComboBox.getItems().contains(companyName)) {
-                        companyComboBox.getItems().add(companyName);
-                    }
-                }
-                System.out.println("Loaded " + dbFiles.length + " companies from files");
-            }
+        } catch (Exception exception) {
+            showError("Error", "Failed to load companies: " + exception.getMessage());
         }
     }
 
@@ -87,32 +57,15 @@ public class CompanySelectionController {
         }
 
         try {
-            // Find the company in the database to get the company ID
-            Company selectedCompany = null;
-            try {
-                // Try to find by name first
-                selectedCompany = companyService.getAllCompanies().stream()
-                    .filter(c -> c.getName().equals(selectedCompanyName))
-                    .findFirst()
-                    .orElse(null);
-            } catch (Exception e) {
-                System.out.println("Error finding company by name: " + e.getMessage());
-            }
-
-            // If not found in database, show error
-            if (selectedCompany == null) {
-                showError("Error", "Company not found in database.");
-                return;
-            }
+            Company selectedCompany = companyService.openCompany(selectedCompanyName);
             
-            // Load the main menu
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainMenu.fxml"));
             loader.setControllerFactory(applicationContext::getBean);
             Parent root = loader.load();
             
             MainMenuController controller = loader.getController();
-            controller.setCompanyName(selectedCompanyName);
             controller.setCompanyId(selectedCompany.getId());
+            controller.setCompanyName(selectedCompanyName);
             
             Scene scene = new Scene(root, 1200, 800);
             scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
@@ -155,38 +108,31 @@ public class CompanySelectionController {
         }
     }
 
-    public void refreshCompanies() {
-        System.out.println("Refreshing companies...");
-        
-        // Clear the current items
-        companyComboBox.getItems().clear();
-        
-        // First, try to load from database files to ensure we get all companies
-        loadCompaniesFromFiles();
-        
-        // Then try to load from the current database to get additional info
-        try {
-            List<Company> companies = companyService.getAllCompanies();
-            for (Company company : companies) {
-                // Only add if not already in the list
-                if (!companyComboBox.getItems().contains(company.getName())) {
-                    companyComboBox.getItems().add(company.getName());
+    @FXML
+    private void deleteSelectedCompany() {
+        String selectedCompanyName = companyComboBox.getValue();
+        if (selectedCompanyName == null || selectedCompanyName.isEmpty()) {
+            showError("Selection Error", "Please select a company first.");
+            return;
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Company");
+        alert.setHeaderText(null);
+        alert.setContentText("Delete " + selectedCompanyName + " and its database file?");
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                try {
+                    companyService.deleteCompanyByName(selectedCompanyName);
+                    refreshCompanies();
+                } catch (Exception exception) {
+                    showError("Error", "Failed to delete company: " + exception.getMessage());
                 }
             }
-            
-            System.out.println("Found " + companies.size() + " companies in current database");
-            
-        } catch (Exception e) {
-            System.out.println("Error loading companies from current database: " + e.getMessage());
-            // The file-based approach already loaded companies, so we're good
-        }
-        
-        // Set default selection if companies exist
-        if (!companyComboBox.getItems().isEmpty()) {
-            companyComboBox.getSelectionModel().selectFirst();
-        }
-        
-        System.out.println("Total companies loaded: " + companyComboBox.getItems().size());
+        });
+    }
+
+    public void refreshCompanies() {
+        loadCompanies();
     }
 
     public void selectNewlyCreatedCompany(String companyName) {

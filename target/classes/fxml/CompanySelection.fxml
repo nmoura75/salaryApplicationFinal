@@ -27,6 +27,7 @@
                       maxWidth="600" prefWidth="600"
                       style="-fx-background-color: white; -fx-font-size: 16px;"/>
             <Button text="Open Company" styleClass="button" onAction="#openSelectedCompany"/>
+            <Button text="Delete Company" styleClass="button secondary" onAction="#deleteSelectedCompany"/>
         </VBox>
     </VBox>
     

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="16" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.payroll.controller.SalaryPreparationController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Text text="Salary Preparation" styleClass="title"/>
+        <Button fx:id="backButton" text="← Back to Main Menu" onAction="#goBackToMainMenu" styleClass="back-button"/>
+    </HBox>
+
+    <Label fx:id="companyNameText" styleClass="label subtitle"/>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label text="Year" styleClass="label"/>
+        <TextField fx:id="yearField" prefWidth="80"/>
+        <Label text="Month" styleClass="label"/>
+        <ComboBox fx:id="monthComboBox" prefWidth="80"/>
+        <Label text="Business days" styleClass="label"/>
+        <TextField fx:id="businessDaysField" prefWidth="70"/>
+        <Button text="Save days" onAction="#saveBusinessDays" styleClass="secondary-button"/>
+        <Button text="Refresh preview" onAction="#refreshPreview" styleClass="primary-button"/>
+    </HBox>
+
+    <Text text="Daily allowances use these business days. Meal allowance is exempt up to 6.00 per day." styleClass="menu-description"/>
+
+    <TableView fx:id="previewTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="employeeColumn" text="Employee" prefWidth="220"/>
+            <TableColumn fx:id="grossColumn" text="Gross" prefWidth="110"/>
+            <TableColumn fx:id="employeeSocialSecurityColumn" text="Employee SS" prefWidth="120"/>
+            <TableColumn fx:id="employerSocialSecurityColumn" text="Employer SS" prefWidth="120"/>
+            <TableColumn fx:id="taxColumn" text="Tax" prefWidth="110"/>
+            <TableColumn fx:id="netColumn" text="Net" prefWidth="110"/>
+        </columns>
+    </TableView>
+
+    <Text text="Monthly overrides for the selected employee" styleClass="subtitle"/>
+    <VBox fx:id="overrideBox" spacing="8"/>
+    <Text fx:id="statusText" styleClass="status-text"/>
+</VBox>

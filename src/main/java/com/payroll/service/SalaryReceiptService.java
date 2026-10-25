@@ -1,5 +1,10 @@
 package com.payroll.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.payroll.dto.PayrollResult;
+import com.payroll.dto.ProcessMonthResult;
+import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Employee;
 import com.payroll.model.SalaryReceipt;
 import com.payroll.repository.EmployeeRepository;
@@ -22,58 +27,43 @@ public class SalaryReceiptService {
 
     private final SalaryReceiptRepository salaryReceiptRepository;
     private final EmployeeRepository employeeRepository;
+    private final RemunerationService remunerationService;
+    private final PayrollCalculator payrollCalculator;
+    private final ObjectMapper objectMapper;
 
+    /**
+     * Creates one receipt from the employee's remuneration lines for the month.
+     * Month is stored as the calendar month number, from 1 to 12.
+     */
     @Transactional
-    public SalaryReceipt createSalaryReceipt(Integer employeeId, String month, Integer year,
-                                            BigDecimal overtime, BigDecimal bonus,
-                                            BigDecimal mealAllowance, BigDecimal transportAllowance,
-                                            BigDecimal otherAllowances, String notes) {
+    public SalaryReceipt createMonthlyReceipt(Integer employeeId, int year, int month) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
-
-        if (salaryReceiptRepository.existsByEmployeeIdAndMonthAndYear(employeeId, month, year)) {
+        String monthText = String.valueOf(month);
+        if (salaryReceiptRepository.existsByEmployeeIdAndMonthAndYear(employeeId, monthText, year)) {
             throw new IllegalStateException("Salary receipt already exists for this month");
         }
-
-        SalaryReceipt receipt = new SalaryReceipt();
-        receipt.setEmployeeId(employeeId);
-        receipt.setPaymentDate(LocalDate.now().toString());
-        receipt.setMonth(month);
-        receipt.setYear(year);
-        receipt.setBaseSalary(employee.getBaseSalary());
-        receipt.setOvertime(overtime != null ? overtime : BigDecimal.ZERO);
-        receipt.setBonus(bonus != null ? bonus : BigDecimal.ZERO);
-        receipt.setMealAllowance(mealAllowance != null ? mealAllowance : BigDecimal.ZERO);
-        receipt.setTransportAllowance(transportAllowance != null ? transportAllowance : BigDecimal.ZERO);
-        receipt.setOtherAllowances(otherAllowances != null ? otherAllowances : BigDecimal.ZERO);
-        receipt.setNotes(notes);
-
-        calculateSalaryReceiptAmounts(receipt, employee);
-
-        return salaryReceiptRepository.save(receipt);
+        return salaryReceiptRepository.save(buildReceipt(employee, year, month));
     }
 
+    /**
+     * Creates receipts for active employees. Employees who already have a receipt for the month are refused.
+     */
     @Transactional
-    public SalaryReceipt updateSalaryReceipt(Integer id, BigDecimal overtime, BigDecimal bonus,
-                                            BigDecimal mealAllowance, BigDecimal transportAllowance,
-                                            BigDecimal otherAllowances, String notes) {
-        SalaryReceipt receipt = salaryReceiptRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Salary receipt not found"));
-
-        // Get the employee to pass to calculateSalaryReceiptAmounts
-        Employee employee = employeeRepository.findById(receipt.getEmployeeId())
-                .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
-
-        receipt.setOvertime(overtime != null ? overtime : BigDecimal.ZERO);
-        receipt.setBonus(bonus != null ? bonus : BigDecimal.ZERO);
-        receipt.setMealAllowance(mealAllowance != null ? mealAllowance : BigDecimal.ZERO);
-        receipt.setTransportAllowance(transportAllowance != null ? transportAllowance : BigDecimal.ZERO);
-        receipt.setOtherAllowances(otherAllowances != null ? otherAllowances : BigDecimal.ZERO);
-        receipt.setNotes(notes);
-
-        calculateSalaryReceiptAmounts(receipt, employee);
-
-        return salaryReceiptRepository.save(receipt);
+    public ProcessMonthResult processMonth(Integer companyId, int year, int month) {
+        ProcessMonthResult result = new ProcessMonthResult();
+        String monthText = String.valueOf(month);
+        for (Employee employee : employeeRepository.findByCompanyId(companyId)) {
+            if (!isActive(employee)) {
+                continue;
+            }
+            if (salaryReceiptRepository.existsByEmployeeIdAndMonthAndYear(employee.getId(), monthText, year)) {
+                result.getRefusedEmployeeNames().add(employee.getFirstName() + " " + employee.getLastName());
+                continue;
+            }
+            result.getCreated().add(salaryReceiptRepository.save(buildReceipt(employee, year, month)));
+        }
+        return result;
     }
 
     public SalaryReceipt getSalaryReceiptById(Integer id) {
@@ -96,58 +86,69 @@ public class SalaryReceiptService {
         return salaryReceiptRepository.findByCompanyId(companyId, pageable);
     }
 
-    private void calculateSalaryReceiptAmounts(SalaryReceipt receipt, Employee employee) {
-        // Calculate gross amount (base salary + extras)
-        BigDecimal grossAmount = receipt.getBaseSalary()
-                .add(receipt.getOvertime())
-                .add(receipt.getBonus())
-                .add(receipt.getMealAllowance())
-                .add(receipt.getTransportAllowance())
-                .add(receipt.getOtherAllowances());
-        receipt.setGrossAmount(grossAmount);
+    private SalaryReceipt buildReceipt(Employee employee, int year, int month) {
+        List<RemunerationLine> lines = remunerationService.calculateLines(
+                employee.getId(), employee.getCompanyId(), year, month);
+        int dependents = employee.getDependents() == null ? 0 : employee.getDependents();
+        PayrollResult result = payrollCalculator.calculate(
+                employee.getBaseSalary(), lines, dependents, employee.getIrsTable(), employee.getFamiliarSituation());
 
-        // Calculate social security contribution (11% of gross amount)
-        BigDecimal socialSecurityContribution = grossAmount.multiply(new BigDecimal("0.11"));
-        receipt.setSocialSecurityContribution(socialSecurityContribution);
-
-        // Calculate income tax (based on gross amount)
-        BigDecimal incomeTax = calculateIncomeTax(grossAmount, employee);
-        receipt.setIncomeTax(incomeTax);
-
-        // Calculate net amount
-        BigDecimal netAmount = grossAmount
-                .subtract(socialSecurityContribution)
-                .subtract(incomeTax);
-        receipt.setNetAmount(netAmount);
+        SalaryReceipt receipt = new SalaryReceipt();
+        receipt.setEmployeeId(employee.getId());
+        receipt.setPaymentDate(LocalDate.now().toString());
+        receipt.setMonth(String.valueOf(month));
+        receipt.setYear(year);
+        receipt.setBaseSalary(employee.getBaseSalary());
+        receipt.setOvertime(amountNamed(lines, "Overtime"));
+        receipt.setBonus(amountNamed(lines, "Christmas Bonus").add(amountNamed(lines, "Vacation Subsidy")));
+        receipt.setMealAllowance(amountNamed(lines, "Meal Allowance"));
+        receipt.setTransportAllowance(amountNamed(lines, "Transport Allowance"));
+        receipt.setOtherAllowances(otherAmounts(lines));
+        receipt.setGrossAmount(result.getGross());
+        receipt.setSocialSecurityContribution(result.getEmployeeSocialSecurity());
+        receipt.setEmployerSocialSecurityContribution(result.getEmployerSocialSecurity());
+        receipt.setIncomeTax(result.getIncomeTax());
+        receipt.setTaxIdContribution(result.getIncomeTax());
+        receipt.setTotalContributions(result.getEmployeeSocialSecurity().add(result.getIncomeTax()));
+        receipt.setNetAmount(result.getNet());
+        receipt.setTotalRemuneration(lines.stream()
+                .map(line -> line.getAmount() == null ? BigDecimal.ZERO : line.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+        receipt.setRemunerationBreakdown(writeBreakdown(lines));
+        return receipt;
     }
 
-    private BigDecimal calculateIncomeTax(BigDecimal grossAmount, Employee employee) {
-        // Get base tax rate
-        BigDecimal taxRate = getTaxRate(grossAmount);
-        
-        // Calculate tax amount before deductions
-        BigDecimal baseTaxAmount = grossAmount.multiply(taxRate);
-        
-        // Apply deductions for dependents (50.00 per dependent)
-        BigDecimal dependentDeduction = BigDecimal.valueOf(employee.getDependents())
-                .multiply(new BigDecimal("50.00"));
-        
-        // Calculate final tax amount (minimum 0)
-        return baseTaxAmount.subtract(dependentDeduction).max(BigDecimal.ZERO);
+    private BigDecimal amountNamed(List<RemunerationLine> lines, String name) {
+        return lines.stream()
+                .filter(line -> name.equals(line.getCategoryName()))
+                .map(line -> line.getAmount() == null ? BigDecimal.ZERO : line.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    private BigDecimal otherAmounts(List<RemunerationLine> lines) {
+        return lines.stream()
+                .filter(line -> !isNamedColumn(line.getCategoryName()))
+                .map(line -> line.getAmount() == null ? BigDecimal.ZERO : line.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
-    //TODO: adapt for the existence rates in Portugal and make this an independente method in a new class because this should be validated executed every time we proces a monthly payroll/receipt  
-    
-    private BigDecimal getTaxRate(BigDecimal grossAmount) {
-        if (grossAmount.compareTo(new BigDecimal("1000.00")) <= 0) {
-            return new BigDecimal("0.00");
-        } else if (grossAmount.compareTo(new BigDecimal("2500.00")) <= 0) {
-            return new BigDecimal("0.15");
-        } else if (grossAmount.compareTo(new BigDecimal("5000.00")) <= 0) {
-            return new BigDecimal("0.25");
-        } else {
-            return new BigDecimal("0.35");
+    private boolean isNamedColumn(String name) {
+        return "Overtime".equals(name)
+                || "Christmas Bonus".equals(name)
+                || "Vacation Subsidy".equals(name)
+                || "Meal Allowance".equals(name)
+                || "Transport Allowance".equals(name);
+    }
+
+    private String writeBreakdown(List<RemunerationLine> lines) {
+        try {
+            return objectMapper.writeValueAsString(lines);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Could not store the remuneration breakdown", exception);
         }
     }
-} 
+
+    private boolean isActive(Employee employee) {
+        return employee.getStatus() == null || "ACTIVE".equalsIgnoreCase(employee.getStatus());
+    }
+}

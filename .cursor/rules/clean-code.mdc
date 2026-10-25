@@ -1,0 +1,24 @@
+---
+description: Clean code principles for this JavaFX payroll project
+alwaysApply: true
+---
+
+# Clean Code
+
+Working code is not automatically clean code. Preserve behavior; leave touched code cleaner within scope.
+
+## Decision rules
+- One responsibility per function; keep methods small and at one abstraction level
+- Precise names; one term per concept; no abbreviations like `tmp`, `data2`
+- Few meaningful parameters; avoid boolean flags and grab-bag args
+- Commands vs queries; no hidden side effects
+- Happy path first; isolate validation/errors; don't swallow exceptions
+- Keep JavaFX, JPA/DB, and PDF details out of domain calculation (`PayrollCalculator` / services)
+- Comments for why/constraints only; delete commented-out code
+- Tests are production code; protect changed behavior
+
+## When editing
+- Split mixed setup/validation/compute/side-effect methods
+- If cleanup spreads, stop at the smallest safe refactor for the request
+- Prefer existing `controller` → `service` → `repository` layers; ask before adding new layers
+- When changing behavior, update or add a test; run tests when the user asks or when shipping a fix

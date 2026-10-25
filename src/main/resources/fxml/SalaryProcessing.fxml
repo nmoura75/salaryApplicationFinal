@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="16" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.payroll.controller.SalaryProcessingController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Text text="Salary Processing" styleClass="title"/>
+        <Button fx:id="backButton" text="← Back to Main Menu" onAction="#goBackToMainMenu" styleClass="back-button"/>
+    </HBox>
+
+    <Label fx:id="companyNameText" styleClass="label subtitle"/>
+    <Text text="Creates one receipt per active employee from the prepared remunerations." styleClass="menu-description"/>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label text="Year" styleClass="label"/>
+        <TextField fx:id="yearField" prefWidth="80"/>
+        <Label text="Month" styleClass="label"/>
+        <ComboBox fx:id="monthComboBox" prefWidth="80"/>
+        <Button text="Create receipts" onAction="#processMonth" styleClass="primary-button"/>
+    </HBox>
+
+    <Text fx:id="statusText" styleClass="status-text" wrappingWidth="700"/>
+</VBox>

@@ -67,6 +67,12 @@ public class RemunerationManagementController implements Initializable {
     
     @FXML
     private TextField transportAllowanceNotes;
+
+    @FXML
+    private TextField commissionField;
+
+    @FXML
+    private TextField commissionNotes;
     
     @FXML
     private Label statusText;
@@ -103,6 +109,7 @@ public class RemunerationManagementController implements Initializable {
         addNumericValidation(christmasBonusField);
         addNumericValidation(vacationSubsidyField);
         addNumericValidation(transportAllowanceField);
+        addNumericValidation(commissionField);
     }
 
     private void addNumericValidation(TextField field) {
@@ -118,12 +125,12 @@ public class RemunerationManagementController implements Initializable {
         if (companyNameText != null) {
             companyNameText.setText("Company: " + companyName);
         }
-        loadEmployees();
-        loadCategories();
     }
     
     public void setCompanyId(Integer companyId) {
         this.companyId = companyId;
+        loadEmployees();
+        loadCategories();
     }
 
     private void loadEmployees() {
@@ -175,22 +182,51 @@ public class RemunerationManagementController implements Initializable {
         
         // Populate based on category names (this is a simplified approach)
         for (EmployeeRemuneration remuneration : remunerations) {
-            // In a real implementation, you'd get the category name and map it properly
-            // For now, we'll use a simple approach based on category ID
-            if (remuneration.getCategoryId() == 1) { // Meal Allowance
-                mealAllowanceField.setText(remuneration.getValue() != null ? remuneration.getValue().toString() : "");
-                mealAllowanceNotes.setText(remuneration.getNotes() != null ? remuneration.getNotes() : "");
-            } else if (remuneration.getCategoryId() == 2) { // Christmas Bonus
-                christmasBonusField.setText(remuneration.getValue() != null ? remuneration.getValue().toString() : "");
-                christmasBonusNotes.setText(remuneration.getNotes() != null ? remuneration.getNotes() : "");
-            } else if (remuneration.getCategoryId() == 3) { // Vacation Subsidy
-                vacationSubsidyField.setText(remuneration.getValue() != null ? remuneration.getValue().toString() : "");
-                vacationSubsidyNotes.setText(remuneration.getNotes() != null ? remuneration.getNotes() : "");
-            } else if (remuneration.getCategoryId() == 5) { // Transport Allowance
-                transportAllowanceField.setText(remuneration.getValue() != null ? remuneration.getValue().toString() : "");
-                transportAllowanceNotes.setText(remuneration.getNotes() != null ? remuneration.getNotes() : "");
+            RemunerationCategory category = categoryById(remuneration.getCategoryId());
+            if (category == null) {
+                continue;
+            }
+            if ("Meal Allowance".equals(category.getName())) {
+                mealAllowanceField.setText(text(remuneration.getValue()));
+                mealAllowanceNotes.setText(text(remuneration.getNotes()));
+            } else if ("Christmas Bonus".equals(category.getName())) {
+                christmasBonusField.setText(text(remuneration.getValue()));
+                christmasBonusNotes.setText(text(remuneration.getNotes()));
+            } else if ("Vacation Subsidy".equals(category.getName())) {
+                vacationSubsidyField.setText(text(remuneration.getValue()));
+                vacationSubsidyNotes.setText(text(remuneration.getNotes()));
+            } else if ("Transport Allowance".equals(category.getName())) {
+                transportAllowanceField.setText(text(remuneration.getValue()));
+                transportAllowanceNotes.setText(text(remuneration.getNotes()));
+            } else if ("Commission".equals(category.getName())) {
+                commissionField.setText(text(remuneration.getValue()));
+                commissionNotes.setText(text(remuneration.getNotes()));
             }
         }
+    }
+
+    private RemunerationCategory categoryById(Integer categoryId) {
+        if (categories == null) {
+            return null;
+        }
+        return categories.stream()
+                .filter(category -> category.getId().equals(categoryId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private RemunerationCategory categoryByName(String name) {
+        if (categories == null) {
+            return null;
+        }
+        return categories.stream()
+                .filter(category -> name.equals(category.getName()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String text(Object value) {
+        return value == null ? "" : value.toString();
     }
 
     private void clearFields() {
@@ -202,6 +238,8 @@ public class RemunerationManagementController implements Initializable {
         vacationSubsidyNotes.clear();
         transportAllowanceField.clear();
         transportAllowanceNotes.clear();
+        commissionField.clear();
+        commissionNotes.clear();
     }
 
     @FXML
@@ -213,17 +251,11 @@ public class RemunerationManagementController implements Initializable {
         }
 
         try {
-            // Save meal allowance
-            saveRemuneration(selectedEmployee.getId(), 1, mealAllowanceField.getText(), mealAllowanceNotes.getText());
-            
-            // Save Christmas bonus
-            saveRemuneration(selectedEmployee.getId(), 2, christmasBonusField.getText(), christmasBonusNotes.getText());
-            
-            // Save vacation subsidy
-            saveRemuneration(selectedEmployee.getId(), 3, vacationSubsidyField.getText(), vacationSubsidyNotes.getText());
-            
-            // Save transport allowance
-            saveRemuneration(selectedEmployee.getId(), 5, transportAllowanceField.getText(), transportAllowanceNotes.getText());
+            saveNamed(selectedEmployee.getId(), "Meal Allowance", mealAllowanceField.getText(), mealAllowanceNotes.getText());
+            saveNamed(selectedEmployee.getId(), "Christmas Bonus", christmasBonusField.getText(), christmasBonusNotes.getText());
+            saveNamed(selectedEmployee.getId(), "Vacation Subsidy", vacationSubsidyField.getText(), vacationSubsidyNotes.getText());
+            saveNamed(selectedEmployee.getId(), "Transport Allowance", transportAllowanceField.getText(), transportAllowanceNotes.getText());
+            saveNamed(selectedEmployee.getId(), "Commission", commissionField.getText(), commissionNotes.getText());
             
             updateStatus("Default remunerations saved successfully!", "success");
         } catch (Exception e) {
@@ -231,11 +263,19 @@ public class RemunerationManagementController implements Initializable {
         }
     }
 
+    private void saveNamed(Integer employeeId, String categoryName, String valueStr, String notes) {
+        RemunerationCategory category = categoryByName(categoryName);
+        if (category == null) {
+            return;
+        }
+        saveRemuneration(employeeId, category.getId(), valueStr, notes);
+    }
+
     private void saveRemuneration(Integer employeeId, Integer categoryId, String valueStr, String notes) {
         if (valueStr != null && !valueStr.trim().isEmpty()) {
             try {
                 BigDecimal value = new BigDecimal(valueStr.trim());
-                remunerationService.setEmployeeRemuneration(employeeId, categoryId, value);
+                remunerationService.setEmployeeRemuneration(employeeId, categoryId, value, notes);
             } catch (NumberFormatException e) {
                 // Skip invalid values
             }
@@ -250,6 +290,7 @@ public class RemunerationManagementController implements Initializable {
             Parent root = loader.load();
             
             EmployeesMenuController controller = loader.getController();
+            controller.setCompanyId(companyId);
             controller.setCompanyName(companyName);
             
             Scene scene = new Scene(root, 1200, 800);

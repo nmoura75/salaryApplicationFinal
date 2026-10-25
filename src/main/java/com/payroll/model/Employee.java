@@ -38,6 +38,9 @@ public class Employee {
     @Column(name = "social_security_contribution", nullable = false, precision = 38, scale = 2)
     private BigDecimal socialSecurityContribution;
 
+    @Column(name = "employer_social_security_contribution", nullable = false, precision = 38, scale = 2)
+    private BigDecimal employerSocialSecurityContribution;
+
     @Column(name = "tax_id_contribution", nullable = false, precision = 38, scale = 2)
     private BigDecimal taxIdContribution;
 

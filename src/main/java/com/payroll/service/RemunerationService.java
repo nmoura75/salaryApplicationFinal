@@ -1,5 +1,6 @@
 package com.payroll.service;
 
+import com.payroll.dto.RemunerationLine;
 import com.payroll.model.*;
 import com.payroll.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -9,223 +10,205 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class RemunerationService {
-    
+
     private final RemunerationCategoryRepository categoryRepository;
     private final EmployeeRemunerationRepository employeeRemunerationRepository;
     private final MonthlyRemunerationRepository monthlyRemunerationRepository;
     private final MonthlyBusinessDaysRepository monthlyBusinessDaysRepository;
-    
+    private final EmployeeRepository employeeRepository;
+
     /**
-     * Calculate total remuneration for an employee for a specific month
+     * Sum of remuneration lines for an employee and month, excluding base salary.
      */
     public BigDecimal calculateMonthlyRemuneration(Integer employeeId, Integer companyId, Integer year, Integer month) {
-        BigDecimal total = BigDecimal.ZERO;
-        
-        // Get all active remuneration categories for the company
-        List<RemunerationCategory> categories = categoryRepository.findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(companyId);
-        
+        return calculateLines(employeeId, companyId, year, month).stream()
+                .map(line -> line.getAmount() == null ? BigDecimal.ZERO : line.getAmount())
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculated lines for one employee. Percentage categories are applied to the base salary.
+     */
+    public List<RemunerationLine> calculateLines(Integer employeeId, Integer companyId, Integer year, Integer month) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+        BigDecimal baseSalary = employee.getBaseSalary() == null ? BigDecimal.ZERO : employee.getBaseSalary();
+        List<RemunerationLine> lines = new ArrayList<>();
+        List<RemunerationCategory> categories = categoryRepository
+                .findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(companyId);
         for (RemunerationCategory category : categories) {
-            BigDecimal amount = calculateCategoryAmount(category, employeeId, companyId, year, month);
-            total = total.add(amount);
+            lines.add(buildLine(category, employeeId, companyId, year, month, baseSalary));
         }
-        
-        return total.setScale(2, RoundingMode.HALF_UP);
+        return lines;
     }
-    
+
     /**
-     * Calculate amount for a specific remuneration category
+     * Business days stored for the month, or the weekday count when none are stored.
      */
-    private BigDecimal calculateCategoryAmount(RemunerationCategory category, Integer employeeId, 
-                                            Integer companyId, Integer year, Integer month) {
-        
-        // First check if there's a monthly override
-        Optional<MonthlyRemuneration> monthlyRemuneration = monthlyRemunerationRepository
-            .findByEmployeeIdAndCategoryIdAndYearAndMonth(employeeId, category.getId(), year, month);
-        
-        if (monthlyRemuneration.isPresent()) {
-            MonthlyRemuneration mr = monthlyRemuneration.get();
-            if (mr.isOverride()) {
-                // This is an override, use the monthly value
-                return mr.getValue() != null ? mr.getValue() : BigDecimal.ZERO;
-            } else {
-                // This is additional to the default, add it to the default calculation
-                BigDecimal defaultAmount = calculateDefaultAmount(category, employeeId, companyId, year, month);
-                BigDecimal additionalAmount = mr.getValue() != null ? mr.getValue() : BigDecimal.ZERO;
-                return defaultAmount.add(additionalAmount);
-            }
-        }
-        
-        // No monthly override, use default calculation
-        return calculateDefaultAmount(category, employeeId, companyId, year, month);
+    public int getEffectiveBusinessDays(Integer companyId, Integer year, Integer month) {
+        return monthlyBusinessDaysRepository.findByCompanyIdAndYearAndMonth(companyId, year, month)
+                .map(MonthlyBusinessDays::getBusinessDays)
+                .orElseGet(() -> calculateBusinessDaysForMonth(year, month));
     }
-    
-    /**
-     * Calculate default amount for a category (from employee defaults)
-     */
-    private BigDecimal calculateDefaultAmount(RemunerationCategory category, Integer employeeId, 
-                                           Integer companyId, Integer year, Integer month) {
-        
-        // Get employee's default value for this category
-        List<EmployeeRemuneration> employeeRemunerations = employeeRemunerationRepository
-            .findByEmployeeIdAndCategoryIdAndIsActiveTrue(employeeId, category.getId());
-        
-        BigDecimal value = BigDecimal.ZERO;
-        if (!employeeRemunerations.isEmpty()) {
-            value = employeeRemunerations.get(0).getValue();
-        }
-        
-        if (value == null || value.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        
-        switch (category.getType()) {
-            case DAILY:
-                return calculateDailyAmount(value, companyId, year, month);
-            case MONTHLY:
-                return value;
-            case PERCENTAGE:
-                // For percentage-based, we need base salary - this will be handled in salary calculation
-                return value;
-            default:
-                return BigDecimal.ZERO;
-        }
-    }
-    
-    /**
-     * Calculate daily-based remuneration (e.g., meal allowance)
-     */
-    private BigDecimal calculateDailyAmount(BigDecimal dailyValue, Integer companyId, Integer year, Integer month) {
-        Optional<MonthlyBusinessDays> businessDays = monthlyBusinessDaysRepository
-            .findByCompanyIdAndYearAndMonth(companyId, year, month);
-        
-        if (businessDays.isPresent()) {
-            return dailyValue.multiply(BigDecimal.valueOf(businessDays.get().getBusinessDays()));
-        } else {
-            // Fallback: calculate business days automatically
-            int calculatedBusinessDays = calculateBusinessDaysForMonth(year, month);
-            return dailyValue.multiply(BigDecimal.valueOf(calculatedBusinessDays));
-        }
-    }
-    
-    /**
-     * Calculate business days for a month (excluding weekends)
-     */
-    private int calculateBusinessDaysForMonth(int year, int month) {
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int daysInMonth = yearMonth.lengthOfMonth();
-        int businessDays = 0;
-        
-        for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-            if (date.getDayOfWeek().getValue() <= 5) { // Monday = 1, Friday = 5
-                businessDays++;
-            }
-        }
-        
-        return businessDays;
-    }
-    
-    /**
-     * Set monthly business days for a company
-     */
+
     public MonthlyBusinessDays setMonthlyBusinessDays(Integer companyId, Integer year, Integer month, Integer businessDays) {
         Optional<MonthlyBusinessDays> existing = monthlyBusinessDaysRepository
-            .findByCompanyIdAndYearAndMonth(companyId, year, month);
-        
+                .findByCompanyIdAndYearAndMonth(companyId, year, month);
+
         if (existing.isPresent()) {
-            MonthlyBusinessDays mbd = existing.get();
-            mbd.setBusinessDays(businessDays);
-            mbd.setLastUpdated(LocalDate.now().toString());
-            return monthlyBusinessDaysRepository.save(mbd);
-        } else {
-            MonthlyBusinessDays mbd = new MonthlyBusinessDays();
-            mbd.setCompanyId(companyId);
-            mbd.setYear(year);
-            mbd.setMonth(month);
-            mbd.setBusinessDays(businessDays);
-            mbd.setLastUpdated(LocalDate.now().toString());
-            return monthlyBusinessDaysRepository.save(mbd);
+            MonthlyBusinessDays monthlyBusinessDays = existing.get();
+            monthlyBusinessDays.setBusinessDays(businessDays);
+            monthlyBusinessDays.setLastUpdated(LocalDate.now().toString());
+            return monthlyBusinessDaysRepository.save(monthlyBusinessDays);
         }
+
+        MonthlyBusinessDays monthlyBusinessDays = new MonthlyBusinessDays();
+        monthlyBusinessDays.setCompanyId(companyId);
+        monthlyBusinessDays.setYear(year);
+        monthlyBusinessDays.setMonth(month);
+        monthlyBusinessDays.setBusinessDays(businessDays);
+        monthlyBusinessDays.setLastUpdated(LocalDate.now().toString());
+        return monthlyBusinessDaysRepository.save(monthlyBusinessDays);
     }
-    
-    /**
-     * Get all remuneration categories for a company
-     */
+
     public List<RemunerationCategory> getCategoriesForCompany(Integer companyId) {
         return categoryRepository.findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(companyId);
     }
-    
-    /**
-     * Get employee default remunerations
-     */
+
     public List<EmployeeRemuneration> getEmployeeRemunerations(Integer employeeId) {
         return employeeRemunerationRepository.findByEmployeeIdAndIsActiveTrue(employeeId);
     }
-    
-    /**
-     * Set employee default remuneration for a category
-     */
-    public EmployeeRemuneration setEmployeeRemuneration(Integer employeeId, Integer categoryId, BigDecimal value) {
+
+    public EmployeeRemuneration setEmployeeRemuneration(Integer employeeId, Integer categoryId,
+                                                        BigDecimal value, String notes) {
         List<EmployeeRemuneration> existingList = employeeRemunerationRepository
-            .findByEmployeeIdAndCategoryIdAndIsActiveTrue(employeeId, categoryId);
-        
+                .findByEmployeeIdAndCategoryIdAndIsActiveTrue(employeeId, categoryId);
+
         if (!existingList.isEmpty()) {
-            EmployeeRemuneration er = existingList.get(0);
-            er.setValue(value);
-            return employeeRemunerationRepository.save(er);
-        } else {
-            EmployeeRemuneration er = new EmployeeRemuneration();
-            er.setEmployeeId(employeeId);
-            er.setCategoryId(categoryId);
-            er.setValue(value);
-            er.setActive(true);
-            return employeeRemunerationRepository.save(er);
+            EmployeeRemuneration employeeRemuneration = existingList.get(0);
+            employeeRemuneration.setValue(value);
+            employeeRemuneration.setNotes(notes);
+            return employeeRemunerationRepository.save(employeeRemuneration);
         }
+
+        EmployeeRemuneration employeeRemuneration = new EmployeeRemuneration();
+        employeeRemuneration.setEmployeeId(employeeId);
+        employeeRemuneration.setCategoryId(categoryId);
+        employeeRemuneration.setValue(value);
+        employeeRemuneration.setNotes(notes);
+        employeeRemuneration.setActive(true);
+        return employeeRemunerationRepository.save(employeeRemuneration);
     }
-    
-    /**
-     * Set monthly remuneration (override or additional)
-     */
-    public MonthlyRemuneration setMonthlyRemuneration(Integer employeeId, Integer categoryId, 
+
+    public MonthlyRemuneration setMonthlyRemuneration(Integer employeeId, Integer categoryId,
                                                      Integer year, Integer month, BigDecimal value, boolean isOverride) {
         Optional<MonthlyRemuneration> existing = monthlyRemunerationRepository
-            .findByEmployeeIdAndCategoryIdAndYearAndMonth(employeeId, categoryId, year, month);
-        
+                .findByEmployeeIdAndCategoryIdAndYearAndMonth(employeeId, categoryId, year, month);
+
         if (existing.isPresent()) {
-            MonthlyRemuneration mr = existing.get();
-            mr.setValue(value);
-            mr.setOverride(isOverride);
-            return monthlyRemunerationRepository.save(mr);
-        } else {
-            MonthlyRemuneration mr = new MonthlyRemuneration();
-            mr.setEmployeeId(employeeId);
-            mr.setCategoryId(categoryId);
-            mr.setYear(year);
-            mr.setMonth(month);
-            mr.setValue(value);
-            mr.setOverride(isOverride);
-            return monthlyRemunerationRepository.save(mr);
+            MonthlyRemuneration monthlyRemuneration = existing.get();
+            monthlyRemuneration.setValue(value);
+            monthlyRemuneration.setOverride(isOverride);
+            return monthlyRemunerationRepository.save(monthlyRemuneration);
         }
+
+        MonthlyRemuneration monthlyRemuneration = new MonthlyRemuneration();
+        monthlyRemuneration.setEmployeeId(employeeId);
+        monthlyRemuneration.setCategoryId(categoryId);
+        monthlyRemuneration.setYear(year);
+        monthlyRemuneration.setMonth(month);
+        monthlyRemuneration.setValue(value);
+        monthlyRemuneration.setOverride(isOverride);
+        return monthlyRemunerationRepository.save(monthlyRemuneration);
     }
-    
+
     /**
-     * Get monthly remunerations for a specific month
-     * Note: This method now returns an empty list since we removed the complex query.
-     * In a real implementation, you might want to implement this differently.
+     * Monthly remuneration rows for every employee of the open company.
      */
     public List<MonthlyRemuneration> getMonthlyRemunerations(Integer companyId, Integer year, Integer month) {
-        // TODO: Since we removed the complex query, return empty list for now
-        // In a real implementation, you might want to:
-        // 1. Get all employees for the company first
-        // 2. Then get monthly remunerations for each employee
-        // 3. Or implement a different query approach
-        return new ArrayList<>();
+        List<MonthlyRemuneration> rows = new ArrayList<>();
+        for (Employee employee : employeeRepository.findByCompanyId(companyId)) {
+            rows.addAll(monthlyRemunerationRepository.findByEmployeeIdAndYearAndMonth(employee.getId(), year, month));
+        }
+        return rows;
+    }
+
+    private RemunerationLine buildLine(RemunerationCategory category, Integer employeeId, Integer companyId,
+                                       Integer year, Integer month, BigDecimal baseSalary) {
+        BigDecimal configuredValue = defaultValue(employeeId, category.getId());
+        boolean override = false;
+        Optional<MonthlyRemuneration> monthlyRemuneration = monthlyRemunerationRepository
+                .findByEmployeeIdAndCategoryIdAndYearAndMonth(employeeId, category.getId(), year, month);
+        if (monthlyRemuneration.isPresent() && monthlyRemuneration.get().isOverride()) {
+            configuredValue = monthlyRemuneration.get().getValue() == null
+                    ? BigDecimal.ZERO : monthlyRemuneration.get().getValue();
+            override = true;
+        }
+
+        int businessDays = getEffectiveBusinessDays(companyId, year, month);
+        BigDecimal amount = amountFor(category, configuredValue, baseSalary, businessDays, override);
+        if (monthlyRemuneration.isPresent() && !monthlyRemuneration.get().isOverride()) {
+            BigDecimal additional = monthlyRemuneration.get().getValue() == null
+                    ? BigDecimal.ZERO : monthlyRemuneration.get().getValue();
+            amount = amount.add(additional);
+        }
+
+        RemunerationLine line = new RemunerationLine();
+        line.setCategoryId(category.getId());
+        line.setCategoryName(category.getName());
+        line.setType(category.getType());
+        line.setContributionRule(category.getContributionRule() == null
+                ? RemunerationCategory.ContributionRule.SUBJECT : category.getContributionRule());
+        line.setAmount(amount.setScale(2, RoundingMode.HALF_UP));
+        line.setBusinessDays(category.getType() == RemunerationCategory.RemunerationType.DAILY
+                || category.getContributionRule() == RemunerationCategory.ContributionRule.MEAL_DAILY
+                ? businessDays : null);
+        return line;
+    }
+
+    private BigDecimal defaultValue(Integer employeeId, Integer categoryId) {
+        List<EmployeeRemuneration> employeeRemunerations = employeeRemunerationRepository
+                .findByEmployeeIdAndCategoryIdAndIsActiveTrue(employeeId, categoryId);
+        if (employeeRemunerations.isEmpty() || employeeRemunerations.get(0).getValue() == null) {
+            return BigDecimal.ZERO;
+        }
+        return employeeRemunerations.get(0).getValue();
+    }
+
+    private BigDecimal amountFor(RemunerationCategory category, BigDecimal value, BigDecimal baseSalary,
+                                 int businessDays, boolean override) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (override || category.getType() == RemunerationCategory.RemunerationType.MONTHLY) {
+            return value;
+        }
+        if (category.getType() == RemunerationCategory.RemunerationType.DAILY) {
+            return value.multiply(BigDecimal.valueOf(businessDays));
+        }
+        if (category.getType() == RemunerationCategory.RemunerationType.PERCENTAGE) {
+            return baseSalary.multiply(value).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        }
+        return BigDecimal.ZERO;
+    }
+
+    private int calculateBusinessDaysForMonth(int year, int month) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        int businessDays = 0;
+        for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
+            LocalDate date = LocalDate.of(year, month, day);
+            if (date.getDayOfWeek().getValue() <= 5) {
+                businessDays++;
+            }
+        }
+        return businessDays;
     }
 }

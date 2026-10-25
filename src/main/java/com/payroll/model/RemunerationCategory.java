@@ -27,6 +27,10 @@ public class RemunerationCategory {
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
     private RemunerationType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "contribution_rule", nullable = false)
+    private ContributionRule contributionRule = ContributionRule.SUBJECT;
     
     @Column(name = "default_value", precision = 10, scale = 2)
     private BigDecimal defaultValue;
@@ -44,5 +48,11 @@ public class RemunerationCategory {
         DAILY,      // e.g., Meal allowance (per business day)
         MONTHLY,    // e.g., Christmas bonus, vacation subsidy
         PERCENTAGE  // e.g., Commission based on salary or sales
+    }
+
+    public enum ContributionRule {
+        SUBJECT,
+        EXEMPT,
+        MEAL_DAILY
     }
 }

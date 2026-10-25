@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="16" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.payroll.controller.SalaryConsultingController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="20">
+        <Text text="Salary Consulting" styleClass="title"/>
+        <Button fx:id="backButton" text="← Back to Main Menu" onAction="#goBackToMainMenu" styleClass="back-button"/>
+    </HBox>
+
+    <Label fx:id="companyNameText" styleClass="label subtitle"/>
+
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Label text="Year" styleClass="label"/>
+        <TextField fx:id="yearField" prefWidth="80"/>
+        <Label text="Month" styleClass="label"/>
+        <ComboBox fx:id="monthComboBox" prefWidth="80"/>
+        <Button text="Load" onAction="#loadReceipts" styleClass="secondary-button"/>
+        <Button text="Save selected PDF" onAction="#saveSelectedPdf" styleClass="primary-button"/>
+        <Button text="Save month PDF" onAction="#saveMonthPdf" styleClass="primary-button"/>
+    </HBox>
+
+    <TableView fx:id="receiptsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="employeeColumn" text="Employee" prefWidth="220"/>
+            <TableColumn fx:id="grossColumn" text="Gross" prefWidth="110"/>
+            <TableColumn fx:id="netColumn" text="Net" prefWidth="110"/>
+            <TableColumn fx:id="taxColumn" text="Tax" prefWidth="110"/>
+        </columns>
+    </TableView>
+
+    <Text fx:id="statusText" styleClass="status-text"/>
+</VBox>

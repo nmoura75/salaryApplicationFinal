@@ -1,60 +1,52 @@
 # Salary Calculator
 
-A multi-company salary processing application built with Spring Boot and JavaFX.
+A desktop payroll application for several companies. Each company has its own SQLite file. The window is JavaFX. Spring Boot provides the services and the database access.
 
 ## Features
 
-- Multi-company support
+- One SQLite file per company, indexed in `data/registry.json`
 - Employee management
-- Monthly salary processing
-- Salary receipt generation
-- Database persistence with PostgreSQL
-- Modern JavaFX user interface
+- Monthly salary preparation from remuneration categories
+- Salary receipt creation and PDF export
+- Company files stay on this computer
 
 ## Prerequisites
 
 - Java 17 or higher
 - Maven 3.6 or higher
-- PostgreSQL 12 or higher
 
-## Setup
+## Run during development
 
-1. Create a PostgreSQL database:
-```sql
-CREATE DATABASE salary_calculator;
-```
-
-2. Configure the database connection in `src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/salary_calculator
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-```
-
-3. Build the application:
-```bash
-mvn clean install
-```
-
-4. Run the application:
 ```bash
 mvn javafx:run
 ```
 
-## Project Structure
+Company databases are created under `./data/companies/` when a company is added in the application. The registry file is `./data/registry.json`.
+
+## Standalone build
+
+`mvn javafx:run` is the development launch. A self-contained app image, with its own runtime, is built with:
+
+```bash
+mvn -Ppackage-app verify
+```
+
+The image is written to `target/dist/SalaryCalculator`.
+
+## Project structure
 
 - `src/main/java/com/payroll/model` - Entity classes
 - `src/main/java/com/payroll/repository` - Spring Data JPA repositories
 - `src/main/java/com/payroll/service` - Business logic services
 - `src/main/java/com/payroll/controller` - JavaFX controllers
 - `src/main/resources/fxml` - JavaFX view files
-- `src/main/resources/db/migration` - Flyway database migrations
+- `src/main/resources/db/migration` - Flyway database migrations, applied to each company file
 
-## Technologies Used
+## Technologies
 
 - Spring Boot 3.2.3
 - JavaFX 21.0.2
-- PostgreSQL
+- SQLite
 - Flyway
 - JasperReports
 - Lombok
@@ -62,4 +54,4 @@ mvn javafx:run
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -1,6 +1,6 @@
 package com.payroll.service;
 
-import com.payroll.model.Company;
+import com.payroll.dto.PayrollResult;
 import com.payroll.model.Employee;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.CompanyRepository;
@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -21,6 +20,7 @@ public class EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final CompanyRepository companyRepository;
+    private final PayrollCalculator payrollCalculator;
 
     @Transactional
     public Employee createEmployee(Employee employee) {
@@ -120,47 +120,18 @@ public class EmployeeService {
     }
 
     private void calculateEmployeeContributions(Employee employee) {
-        // Calculate Social Security contribution (11% of base salary)
-        BigDecimal socialSecurityRate = new BigDecimal("0.11");
-        employee.setSocialSecurityContribution(
-            employee.getBaseSalary().multiply(socialSecurityRate)
-        );
+        int dependents = employee.getDependents() == null ? 0 : employee.getDependents();
+        PayrollResult result = payrollCalculator.calculate(
+                employee.getBaseSalary(),
+                List.of(),
+                dependents,
+                employee.getIrsTable(),
+                employee.getFamiliarSituation());
 
-        // Calculate Tax ID contribution (based on base salary and dependents)
-        BigDecimal taxRate = calculateTaxRate(employee.getBaseSalary());
-        BigDecimal dependentDeduction = BigDecimal.valueOf(employee.getDependents())
-                .multiply(new BigDecimal("50.00"));
-        
-        employee.setTaxIdContribution(
-            employee.getBaseSalary()
-                .multiply(taxRate)
-                .subtract(dependentDeduction)
-                .max(BigDecimal.ZERO)
-        );
-
-        // Calculate total contributions
-        employee.setTotalContributions(
-            employee.getSocialSecurityContribution().add(employee.getTaxIdContribution())
-        );
-
-        // Calculate net salary
-        employee.setNetSalary(
-            employee.getBaseSalary().subtract(employee.getTotalContributions())
-        );
-    }
-
-    //TODO: adapt for the existence rates in Portugal and make this an independente method in a new class because this should be validated executed every time we proces a monthly payroll/receipt
-    //TODO: insert field for company contribution
-    private BigDecimal calculateTaxRate(BigDecimal baseSalary) { //to do: adapt for the existence rates in Portugal
-        // Progressive tax rate based on salary ranges
-        if (baseSalary.compareTo(new BigDecimal("1000.00")) <= 0) {
-            return new BigDecimal("0.00");
-        } else if (baseSalary.compareTo(new BigDecimal("2500.00")) <= 0) {
-            return new BigDecimal("0.15");
-        } else if (baseSalary.compareTo(new BigDecimal("5000.00")) <= 0) {
-            return new BigDecimal("0.25");
-        } else {
-            return new BigDecimal("0.35");
-        }
+        employee.setSocialSecurityContribution(result.getEmployeeSocialSecurity());
+        employee.setEmployerSocialSecurityContribution(result.getEmployerSocialSecurity());
+        employee.setTaxIdContribution(result.getIncomeTax());
+        employee.setTotalContributions(result.getEmployeeSocialSecurity().add(result.getIncomeTax()));
+        employee.setNetSalary(result.getNet());
     }
 } 

@@ -10,8 +10,6 @@ import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-
 @Component
 @RequiredArgsConstructor
 public class CreateCompanyDialogController {
@@ -63,30 +61,14 @@ public class CreateCompanyDialogController {
                 return;
             }
 
-            // Create company database file
-            File dataDir = new File("./data");
-            if (!dataDir.exists()) {
-                dataDir.mkdirs();
-            }
-
-            String dbFileName = name.replaceAll("[^a-zA-Z0-9]", "_") + ".db";
-            File dbFile = new File(dataDir, dbFileName);
-
-            // Set the database URL for this new company
-            System.setProperty("spring.datasource.url", "jdbc:sqlite:" + dbFile.getAbsolutePath());
-
-            // Create the company entity
             Company company = new Company();
             company.setName(name);
             company.setTaxId(taxId);
-            company.setTaxIdPassword(""); // Will be set later
             company.setSocialSecurityId(socialSecurityId);
-            company.setSocialSecurityIdPassword(""); // Will be set later
             company.setAddress(address);
             company.setPhone(phone);
             company.setEmail(email);
 
-            // Save the company - this will create the database
             Company savedCompany = companyService.createCompany(company);
             System.out.println("Company created successfully: " + savedCompany.getName());
 

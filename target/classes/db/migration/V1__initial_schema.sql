@@ -7,9 +7,9 @@ CREATE TABLE companies (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     tax_id TEXT NOT NULL UNIQUE,
-    tax_id_password TEXT NOT NULL,
+    tax_id_password TEXT,
     social_security_id TEXT NOT NULL UNIQUE,
-    social_security_id_password TEXT NOT NULL,
+    social_security_id_password TEXT,
     address TEXT,
     phone TEXT,
     email TEXT
@@ -26,6 +26,7 @@ CREATE TABLE employees (
     hire_date TEXT NOT NULL,
     base_salary REAL NOT NULL,
     social_security_contribution REAL NOT NULL,
+    employer_social_security_contribution REAL NOT NULL,
     tax_id_contribution REAL NOT NULL,
     total_contributions REAL NOT NULL,
     net_salary REAL NOT NULL,
@@ -52,6 +53,7 @@ CREATE TABLE salary_receipts (
     year INTEGER NOT NULL,
     base_salary REAL NOT NULL,
     social_security_contribution REAL NOT NULL,
+    employer_social_security_contribution REAL NOT NULL,
     tax_id_contribution REAL NOT NULL,
     total_contributions REAL NOT NULL,
     overtime REAL,
@@ -78,6 +80,7 @@ CREATE TABLE remuneration_categories (
     name TEXT NOT NULL UNIQUE,
     description TEXT,
     type TEXT NOT NULL,
+    contribution_rule TEXT NOT NULL DEFAULT 'SUBJECT',
     default_value REAL,
     is_active INTEGER NOT NULL DEFAULT 1,
     company_id INTEGER NOT NULL,
@@ -125,22 +128,6 @@ CREATE TABLE monthly_remunerations (
     FOREIGN KEY (category_id) REFERENCES remuneration_categories(id),
     UNIQUE(employee_id, category_id, year, month)
 );
-
--- =====================================================
--- DEFAULT DATA
--- =====================================================
-
--- Create a default company if none exists
-INSERT INTO companies (id, name, tax_id, tax_id_password, social_security_id, social_security_id_password) 
-VALUES (1, 'Default Company', '123456789', 'password123', 'SS123456', 'sspassword123');
-
--- Insert default remuneration categories for common cases
-INSERT INTO remuneration_categories (name, description, type, default_value, company_id, sort_order) VALUES
-('Meal Allowance', 'Daily meal allowance for business days', 'DAILY', 6.00, 1, 1),
-('Christmas Bonus', 'Annual Christmas bonus (13th month)', 'MONTHLY', 0.00, 1, 2),
-('Vacation Subsidy', 'Vacation allowance', 'MONTHLY', 0.00, 1, 3),
-('Commission', 'Sales or performance commission', 'PERCENTAGE', 0.00, 1, 4),
-('Transport Allowance', 'Monthly transport allowance', 'MONTHLY', 0.00, 1, 5);
 
 -- =====================================================
 -- INDEXES FOR PERFORMANCE
