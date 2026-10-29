@@ -10,6 +10,7 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class PDFGenerationService {
     private final EmployeeService employeeService;
     private final CompanyService companyService;
 
-    public byte[] generateSalaryReceiptPDF(Integer receiptId) throws Exception {
+    public byte[] generateSalaryReceiptPDF(Integer receiptId) throws JRException, IOException {
         // Get the salary receipt
         SalaryReceipt receipt = salaryReceiptService.getSalaryReceiptById(receiptId);
         
@@ -54,7 +55,7 @@ public class PDFGenerationService {
         return generatePDF(reportData);
     }
 
-    private byte[] generatePDF(SalaryReceiptReportDTO data) throws Exception {
+    private byte[] generatePDF(SalaryReceiptReportDTO data) throws JRException, IOException {
         // Load the JasperReport template
         InputStream templateStream = new ClassPathResource("reports/salary_receipt.jrxml").getInputStream();
         JasperReport jasperReport = JasperCompileManager.compileReport(templateStream);
@@ -73,7 +74,8 @@ public class PDFGenerationService {
         return JasperExportManager.exportReportToPdf(jasperPrint);
     }
 
-    public byte[] generateBulkSalaryReceiptsPDF(Integer companyId, String month, Integer year) throws Exception {
+    public byte[] generateBulkSalaryReceiptsPDF(Integer companyId, String month, Integer year)
+            throws JRException, IOException {
         // Get all salary receipts for the company and month
         var receipts = salaryReceiptService.getSalaryReceiptsByCompanyAndMonth(companyId, month, year);
         

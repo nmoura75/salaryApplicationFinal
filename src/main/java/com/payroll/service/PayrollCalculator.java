@@ -1,8 +1,9 @@
 package com.payroll.service;
 
+import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.dto.RemunerationLine;
-import com.payroll.model.RemunerationCategory;
+import com.payroll.model.RemunerationCategory.ContributionRule;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -22,29 +23,22 @@ public class PayrollCalculator {
     public static final BigDecimal MEAL_ALLOWANCE_EXEMPT_PER_DAY = new BigDecimal("6.00");
     public static final BigDecimal DEPENDENT_DEDUCTION = new BigDecimal("50.00");
 
-    /**
-     * Calculates gross, social security, income tax, and net for one employee.
-     * {@code irsTable} and {@code familiarSituation} are accepted so both screens pass the stored values.
-     */
-    public PayrollResult calculate(BigDecimal baseSalary, List<RemunerationLine> lines, int dependents,
-                                   Integer irsTable, Integer familiarSituation) {
-        BigDecimal safeBase = money(baseSalary);
-        BigDecimal remunerationTotal = BigDecimal.ZERO;
-        BigDecimal subject = safeBase;
+    // Temporary brackets: the rate applies to the whole subject amount, not marginally.
+    private static final List<WithholdingBracket> WITHHOLDING_BRACKETS = List.of(
+            new WithholdingBracket(new BigDecimal("1000.00"), BigDecimal.ZERO),
+            new WithholdingBracket(new BigDecimal("2500.00"), new BigDecimal("0.15")),
+            new WithholdingBracket(new BigDecimal("5000.00"), new BigDecimal("0.25")));
+    private static final BigDecimal TOP_WITHHOLDING_RATE = new BigDecimal("0.35");
 
-        if (lines != null) {
-            for (RemunerationLine line : lines) {
-                BigDecimal amount = money(line.getAmount());
-                remunerationTotal = remunerationTotal.add(amount);
-                subject = subject.add(subjectPortion(line, amount));
-            }
-        }
+    public PayrollResult calculate(PayrollInput input) {
+        BigDecimal baseSalary = money(input.baseSalary());
+        List<RemunerationLine> lines = input.remunerationLines();
 
-        subject = money(subject);
-        BigDecimal gross = money(safeBase.add(remunerationTotal));
+        BigDecimal gross = money(baseSalary.add(totalAmount(lines)));
+        BigDecimal subject = money(baseSalary.add(totalSubjectPortion(lines)));
         BigDecimal employeeSocialSecurity = money(subject.multiply(EMPLOYEE_SOCIAL_SECURITY_RATE));
         BigDecimal employerSocialSecurity = money(subject.multiply(EMPLOYER_SOCIAL_SECURITY_RATE));
-        BigDecimal tax = incomeTax(subject, dependents, irsTable, familiarSituation);
+        BigDecimal tax = incomeTax(subject, input);
         BigDecimal net = money(gross.subtract(employeeSocialSecurity).subtract(tax));
 
         PayrollResult result = new PayrollResult();
@@ -57,12 +51,25 @@ public class PayrollCalculator {
         return result;
     }
 
-    private BigDecimal subjectPortion(RemunerationLine line, BigDecimal amount) {
-        RemunerationCategory.ContributionRule rule = line.getContributionRule();
-        if (rule == RemunerationCategory.ContributionRule.EXEMPT) {
+    private BigDecimal totalAmount(List<RemunerationLine> lines) {
+        return lines.stream()
+                .map(line -> money(line.getAmount()))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal totalSubjectPortion(List<RemunerationLine> lines) {
+        return lines.stream()
+                .map(this::subjectPortion)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal subjectPortion(RemunerationLine line) {
+        BigDecimal amount = money(line.getAmount());
+        ContributionRule rule = line.getContributionRule();
+        if (rule == ContributionRule.EXEMPT) {
             return BigDecimal.ZERO;
         }
-        if (rule == RemunerationCategory.ContributionRule.MEAL_DAILY) {
+        if (rule == ContributionRule.MEAL_DAILY) {
             int days = line.getBusinessDays() == null ? 0 : line.getBusinessDays();
             BigDecimal exempt = MEAL_ALLOWANCE_EXEMPT_PER_DAY.multiply(BigDecimal.valueOf(days));
             return money(amount.subtract(exempt).max(BigDecimal.ZERO));
@@ -73,23 +80,18 @@ public class PayrollCalculator {
     /**
      * Temporary withholding. {@code irsTable} and {@code familiarSituation} are unused until official tables are supplied.
      */
-    private BigDecimal incomeTax(BigDecimal taxable, int dependents, Integer irsTable, Integer familiarSituation) {
-        BigDecimal rate = withholdingRate(taxable);
-        BigDecimal deduction = BigDecimal.valueOf(Math.max(dependents, 0)).multiply(DEPENDENT_DEDUCTION);
-        return money(taxable.multiply(rate).subtract(deduction).max(BigDecimal.ZERO));
+    private BigDecimal incomeTax(BigDecimal subject, PayrollInput input) {
+        BigDecimal rate = withholdingRate(subject);
+        BigDecimal deduction = BigDecimal.valueOf(Math.max(input.dependents(), 0)).multiply(DEPENDENT_DEDUCTION);
+        return money(subject.multiply(rate).subtract(deduction).max(BigDecimal.ZERO));
     }
 
-    private BigDecimal withholdingRate(BigDecimal taxable) {
-        if (taxable.compareTo(new BigDecimal("1000.00")) <= 0) {
-            return BigDecimal.ZERO;
-        }
-        if (taxable.compareTo(new BigDecimal("2500.00")) <= 0) {
-            return new BigDecimal("0.15");
-        }
-        if (taxable.compareTo(new BigDecimal("5000.00")) <= 0) {
-            return new BigDecimal("0.25");
-        }
-        return new BigDecimal("0.35");
+    private BigDecimal withholdingRate(BigDecimal subject) {
+        return WITHHOLDING_BRACKETS.stream()
+                .filter(bracket -> subject.compareTo(bracket.upperLimit()) <= 0)
+                .map(WithholdingBracket::rate)
+                .findFirst()
+                .orElse(TOP_WITHHOLDING_RATE);
     }
 
     private static BigDecimal money(BigDecimal value) {
@@ -97,5 +99,8 @@ public class PayrollCalculator {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
         return value.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private record WithholdingBracket(BigDecimal upperLimit, BigDecimal rate) {
     }
 }

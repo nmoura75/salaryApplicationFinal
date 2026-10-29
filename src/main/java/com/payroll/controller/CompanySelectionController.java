@@ -1,21 +1,13 @@
 package com.payroll.controller;
 
 import com.payroll.model.Company;
+import com.payroll.controller.ScreenNavigator.WindowSize;
 import com.payroll.service.CompanyService;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
-import javafx.scene.text.Text;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 
 import java.util.List;
 
@@ -23,10 +15,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CompanySelectionController {
 
+    private static final WindowSize CREATE_COMPANY_DIALOG = new WindowSize(600, 700);
+
     private final CompanyService companyService;
-    
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private ComboBox<String> companyComboBox;
@@ -43,7 +35,7 @@ public class CompanySelectionController {
             for (Company company : companies) {
                 companyComboBox.getItems().add(company.getName());
             }
-        } catch (Exception exception) {
+        } catch (IllegalStateException exception) {
             showError("Error", "Failed to load companies: " + exception.getMessage());
         }
     }
@@ -56,56 +48,21 @@ public class CompanySelectionController {
             return;
         }
 
+        Company selectedCompany;
         try {
-            Company selectedCompany = companyService.openCompany(selectedCompanyName);
-            
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            MainMenuController controller = loader.getController();
-            controller.setCompanyId(selectedCompany.getId());
-            controller.setCompanyName(selectedCompanyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) companyComboBox.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Calculator - " + selectedCompanyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open company: " + e.getMessage());
+            selectedCompany = companyService.openCompany(selectedCompanyName);
+        } catch (IllegalArgumentException | IllegalStateException | EntityNotFoundException exception) {
+            showError("Error", "Failed to open company: " + exception.getMessage());
+            return;
         }
+        screenNavigator.showMainMenu(companyComboBox, selectedCompany.getId(), selectedCompanyName);
     }
 
     @FXML
     private void showCreateCompanyDialog() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/CreateCompanyDialog.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            Scene scene = new Scene(root, 600, 700);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(companyComboBox.getScene().getWindow());
-            dialog.setTitle("Create New Company");
-            dialog.setScene(scene);
-            dialog.setMinWidth(600);
-            dialog.setMinHeight(700);
-            dialog.setResizable(true);
-            
-            CreateCompanyDialogController controller = loader.getController();
-            controller.setParentController(this);
-            
-            dialog.showAndWait();
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open create company dialog: " + e.getMessage());
-        }
+        screenNavigator.<CreateCompanyDialogController>showModalDialog(companyComboBox,
+                "/fxml/CreateCompanyDialog.fxml", "Create New Company", CREATE_COMPANY_DIALOG,
+                controller -> controller.setParentController(this));
     }
 
     @FXML
@@ -124,7 +81,7 @@ public class CompanySelectionController {
                 try {
                     companyService.deleteCompanyByName(selectedCompanyName);
                     refreshCompanies();
-                } catch (Exception exception) {
+                } catch (IllegalArgumentException | IllegalStateException exception) {
                     showError("Error", "Failed to delete company: " + exception.getMessage());
                 }
             }

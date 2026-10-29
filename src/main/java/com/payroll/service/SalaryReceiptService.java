@@ -2,6 +2,7 @@ package com.payroll.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.dto.ProcessMonthResult;
 import com.payroll.dto.RemunerationLine;
@@ -89,9 +90,7 @@ public class SalaryReceiptService {
     private SalaryReceipt buildReceipt(Employee employee, int year, int month) {
         List<RemunerationLine> lines = remunerationService.calculateLines(
                 employee.getId(), employee.getCompanyId(), year, month);
-        int dependents = employee.getDependents() == null ? 0 : employee.getDependents();
-        PayrollResult result = payrollCalculator.calculate(
-                employee.getBaseSalary(), lines, dependents, employee.getIrsTable(), employee.getFamiliarSituation());
+        PayrollResult result = payrollCalculator.calculate(PayrollInput.forEmployee(employee, lines));
 
         SalaryReceipt receipt = new SalaryReceipt();
         receipt.setEmployeeId(employee.getId());

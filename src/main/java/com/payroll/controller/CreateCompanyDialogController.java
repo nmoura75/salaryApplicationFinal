@@ -76,28 +76,16 @@ public class CreateCompanyDialogController {
             Stage stage = (Stage) nameField.getScene().getWindow();
             stage.close();
 
-            // Refresh the parent controller - ensure it happens after dialog closes
+            // Refresh after the dialog has closed so the parent window updates, not the closing one.
             if (parentController != null) {
-                // Use Platform.runLater to ensure UI updates happen on the JavaFX thread
                 Platform.runLater(() -> {
-                    try {
-                        // Refresh the companies list
-                        parentController.refreshCompanies();
-                        
-                        // Select the newly created company
-                        parentController.selectNewlyCreatedCompany(name);
-                        
-                        System.out.println("Company selection completed for: " + name);
-                    } catch (Exception e) {
-                        System.out.println("Error during refresh: " + e.getMessage());
-                        e.printStackTrace();
-                    }
+                    parentController.refreshCompanies();
+                    parentController.selectNewlyCreatedCompany(name);
                 });
             }
 
-        } catch (Exception e) {
-            showError("Error", "Failed to create company: " + e.getMessage());
-            e.printStackTrace();
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            showError("Error", "Failed to create company: " + exception.getMessage());
         }
     }
 

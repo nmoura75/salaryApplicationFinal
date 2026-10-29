@@ -2,19 +2,14 @@ package com.payroll.controller;
 
 import com.payroll.model.*;
 import com.payroll.service.*;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -28,9 +23,7 @@ public class RemunerationManagementController implements Initializable {
 
     private final RemunerationService remunerationService;
     private final EmployeeService employeeService;
-    
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private Label companyNameText;
@@ -134,28 +127,24 @@ public class RemunerationManagementController implements Initializable {
     }
 
     private void loadEmployees() {
+        if (companyId == null) {
+            showError("Error", "Company ID not set");
+            return;
+        }
         try {
-            if (companyId != null) {
-                List<Employee> employees = employeeService.getEmployeesByCompany(companyId);
-                employeeComboBox.setItems(FXCollections.observableArrayList(employees));
-            } else {
-                showError("Error", "Company ID not set");
-            }
-        } catch (Exception e) {
-            showError("Error", "Failed to load employees: " + e.getMessage());
+            List<Employee> employees = employeeService.getEmployeesByCompany(companyId);
+            employeeComboBox.setItems(FXCollections.observableArrayList(employees));
+        } catch (EntityNotFoundException exception) {
+            showError("Error", "Failed to load employees: " + exception.getMessage());
         }
     }
 
     private void loadCategories() {
-        try {
-            if (companyId != null) {
-                categories = remunerationService.getCategoriesForCompany(companyId);
-            } else {
-                showError("Error", "Company ID not set");
-            }
-        } catch (Exception e) {
-            showError("Error", "Failed to load remuneration categories: " + e.getMessage());
+        if (companyId == null) {
+            showError("Error", "Company ID not set");
+            return;
         }
+        categories = remunerationService.getCategoriesForCompany(companyId);
     }
 
     @FXML
@@ -166,14 +155,10 @@ public class RemunerationManagementController implements Initializable {
             return;
         }
 
-        try {
-            List<EmployeeRemuneration> remunerations = remunerationService.getEmployeeRemunerations(selectedEmployee.getId());
-            populateFields(remunerations);
-            remunerationContainer.setVisible(true);
-            updateStatus("Remunerations loaded for " + selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName(), "success");
-        } catch (Exception e) {
-            showError("Error", "Failed to load employee remunerations: " + e.getMessage());
-        }
+        List<EmployeeRemuneration> remunerations = remunerationService.getEmployeeRemunerations(selectedEmployee.getId());
+        populateFields(remunerations);
+        remunerationContainer.setVisible(true);
+        updateStatus("Remunerations loaded for " + selectedEmployee.getFirstName() + " " + selectedEmployee.getLastName(), "success");
     }
 
     private void populateFields(List<EmployeeRemuneration> remunerations) {
@@ -250,17 +235,13 @@ public class RemunerationManagementController implements Initializable {
             return;
         }
 
-        try {
-            saveNamed(selectedEmployee.getId(), "Meal Allowance", mealAllowanceField.getText(), mealAllowanceNotes.getText());
-            saveNamed(selectedEmployee.getId(), "Christmas Bonus", christmasBonusField.getText(), christmasBonusNotes.getText());
-            saveNamed(selectedEmployee.getId(), "Vacation Subsidy", vacationSubsidyField.getText(), vacationSubsidyNotes.getText());
-            saveNamed(selectedEmployee.getId(), "Transport Allowance", transportAllowanceField.getText(), transportAllowanceNotes.getText());
-            saveNamed(selectedEmployee.getId(), "Commission", commissionField.getText(), commissionNotes.getText());
-            
-            updateStatus("Default remunerations saved successfully!", "success");
-        } catch (Exception e) {
-            showError("Error", "Failed to save remunerations: " + e.getMessage());
-        }
+        saveNamed(selectedEmployee.getId(), "Meal Allowance", mealAllowanceField.getText(), mealAllowanceNotes.getText());
+        saveNamed(selectedEmployee.getId(), "Christmas Bonus", christmasBonusField.getText(), christmasBonusNotes.getText());
+        saveNamed(selectedEmployee.getId(), "Vacation Subsidy", vacationSubsidyField.getText(), vacationSubsidyNotes.getText());
+        saveNamed(selectedEmployee.getId(), "Transport Allowance", transportAllowanceField.getText(), transportAllowanceNotes.getText());
+        saveNamed(selectedEmployee.getId(), "Commission", commissionField.getText(), commissionNotes.getText());
+
+        updateStatus("Default remunerations saved successfully!", "success");
     }
 
     private void saveNamed(Integer employeeId, String categoryName, String valueStr, String notes) {
@@ -284,25 +265,11 @@ public class RemunerationManagementController implements Initializable {
 
     @FXML
     private void goBackToEmployees() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EmployeesMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            EmployeesMenuController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Employees - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to return to employees menu: " + e.getMessage());
-        }
+        screenNavigator.<EmployeesMenuController>showScreen(backButton, "/fxml/EmployeesMenu.fxml",
+                "Employees - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void updateStatus(String message, String type) {

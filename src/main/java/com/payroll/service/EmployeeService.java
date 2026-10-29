@@ -1,5 +1,6 @@
 package com.payroll.service;
 
+import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.model.Employee;
 import com.payroll.repository.EmployeeRepository;
@@ -120,13 +121,7 @@ public class EmployeeService {
     }
 
     private void calculateEmployeeContributions(Employee employee) {
-        int dependents = employee.getDependents() == null ? 0 : employee.getDependents();
-        PayrollResult result = payrollCalculator.calculate(
-                employee.getBaseSalary(),
-                List.of(),
-                dependents,
-                employee.getIrsTable(),
-                employee.getFamiliarSituation());
+        PayrollResult result = payrollCalculator.calculate(PayrollInput.forEmployee(employee, List.of()));
 
         employee.setSocialSecurityContribution(result.getEmployeeSocialSecurity());
         employee.setEmployerSocialSecurityContribution(result.getEmployerSocialSecurity());

@@ -1,25 +1,21 @@
 package com.payroll.controller;
 
+import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Employee;
 import com.payroll.service.EmployeeService;
 import com.payroll.service.PayrollCalculator;
 import com.payroll.service.RemunerationService;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -34,9 +30,7 @@ public class SalaryPreparationController {
     private final EmployeeService employeeService;
     private final RemunerationService remunerationService;
     private final PayrollCalculator payrollCalculator;
-
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private Button backButton;
@@ -104,8 +98,8 @@ public class SalaryPreparationController {
             remunerationService.setMonthlyBusinessDays(companyId, selectedYear(), selectedMonth(), days);
             refreshPreview();
             setStatus("Business days saved.");
-        } catch (Exception exception) {
-            showError("Error", "Enter a whole number of business days.");
+        } catch (NumberFormatException exception) {
+            showError("Error", "Enter a whole number of business days and a valid year.");
         }
     }
 
@@ -124,15 +118,15 @@ public class SalaryPreparationController {
                     continue;
                 }
                 List<RemunerationLine> lines = remunerationService.calculateLines(employee.getId(), companyId, year, month);
-                int dependents = employee.getDependents() == null ? 0 : employee.getDependents();
-                PayrollResult result = payrollCalculator.calculate(employee.getBaseSalary(), lines, dependents,
-                        employee.getIrsTable(), employee.getFamiliarSituation());
+                PayrollResult result = payrollCalculator.calculate(PayrollInput.forEmployee(employee, lines));
                 rows.add(new PreviewRow(employee.getId(), employee.getFirstName() + " " + employee.getLastName(), result));
             }
             previewTable.getItems().setAll(rows);
             overrideBox.getChildren().clear();
             setStatus("Preview for " + month + "/" + year + ".");
-        } catch (Exception exception) {
+        } catch (NumberFormatException exception) {
+            showError("Error", "Enter a valid year.");
+        } catch (IllegalArgumentException | EntityNotFoundException exception) {
             showError("Error", "Could not build the preview: " + exception.getMessage());
         }
     }
@@ -167,21 +161,7 @@ public class SalaryPreparationController {
 
     @FXML
     private void goBackToMainMenu() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            MainMenuController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Calculator - " + companyName);
-        } catch (Exception exception) {
-            showError("Error", "Failed to return to the main menu: " + exception.getMessage());
-        }
+        screenNavigator.showMainMenu(backButton, companyId, companyName);
     }
 
     private int selectedYear() {

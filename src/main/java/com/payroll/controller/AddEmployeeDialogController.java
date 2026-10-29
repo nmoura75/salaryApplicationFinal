@@ -4,6 +4,7 @@ import com.payroll.model.Employee;
 import com.payroll.model.Company;
 import com.payroll.service.EmployeeService;
 import com.payroll.service.CompanyService;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -75,30 +76,21 @@ public class AddEmployeeDialogController {
 
     @FXML
     public void initialize() {
-        try {
-            // Set default values - use try-catch to handle any date parsing issues
-            hireDatePicker.setValue(LocalDate.now());
-            
-            // Initialize ComboBox options
-            familiarSituationComboBox.getItems().addAll("Single", "Married", "Divorced", "Widowed");
-            irsTableComboBox.getItems().addAll("Não casado sem dependentes ou casado 2 titulares",
-                    "Não casado com um ou mais dependentes",
-                    "Casado, único titular",
-                    "Não casado ou casado dois titulares sem dependentes - Pessoa com deficiência",
-                    "Não casado com um ou mais dependentes - Pessoa com deficiência",
-                    "Casado dois titulares com um ou mais dependentes - Pessoa com deficiência",
-                    "Casado, único titular - Pessoa com deficiência");
-            statusComboBox.getItems().addAll("ACTIVE", "INACTIVE");
-            
-            // Set default selections
-            familiarSituationComboBox.getSelectionModel().selectFirst();
-            irsTableComboBox.getSelectionModel().selectFirst();
-            statusComboBox.getSelectionModel().selectFirst();
-            
-        } catch (Exception e) {
-            // Log any initialization errors but don't crash the dialog
-            System.err.println("Error initializing AddEmployeeDialog: " + e.getMessage());
-        }
+        hireDatePicker.setValue(LocalDate.now());
+
+        familiarSituationComboBox.getItems().addAll("Single", "Married", "Divorced", "Widowed");
+        irsTableComboBox.getItems().addAll("Não casado sem dependentes ou casado 2 titulares",
+                "Não casado com um ou mais dependentes",
+                "Casado, único titular",
+                "Não casado ou casado dois titulares sem dependentes - Pessoa com deficiência",
+                "Não casado com um ou mais dependentes - Pessoa com deficiência",
+                "Casado dois titulares com um ou mais dependentes - Pessoa com deficiência",
+                "Casado, único titular - Pessoa com deficiência");
+        statusComboBox.getItems().addAll("ACTIVE", "INACTIVE");
+
+        familiarSituationComboBox.getSelectionModel().selectFirst();
+        irsTableComboBox.getSelectionModel().selectFirst();
+        statusComboBox.getSelectionModel().selectFirst();
     }
 
     public void setParentController(EmployeesMenuController parentController) {
@@ -215,8 +207,8 @@ public class AddEmployeeDialogController {
                 try {
                     Company company = companyService.getCompanyByName(companyName);
                     employee.setCompanyId(company.getId());
-                } catch (Exception e) {
-                    showError("Error", "Failed to find company: " + e.getMessage());
+                } catch (EntityNotFoundException exception) {
+                    showError("Error", "Failed to find company: " + exception.getMessage());
                     return;
                 }
             } else {
@@ -236,8 +228,8 @@ public class AddEmployeeDialogController {
                 Platform.runLater(parentController::refreshEmployees);
             }
             
-        } catch (Exception e) {
-            showError("Error", "Failed to create employee: " + e.getMessage());
+        } catch (IllegalArgumentException | EntityNotFoundException exception) {
+            showError("Error", "Failed to create employee: " + exception.getMessage());
         }
     }
 

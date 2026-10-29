@@ -5,22 +5,19 @@ import com.payroll.model.SalaryReceipt;
 import com.payroll.service.EmployeeService;
 import com.payroll.service.PDFGenerationService;
 import com.payroll.service.SalaryReceiptService;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -33,9 +30,7 @@ public class SalaryConsultingController {
     private final SalaryReceiptService salaryReceiptService;
     private final EmployeeService employeeService;
     private final PDFGenerationService pdfGenerationService;
-
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private Button backButton;
@@ -100,7 +95,9 @@ public class SalaryConsultingController {
             }
             receiptsTable.getItems().setAll(rows);
             statusText.setText(rows.size() + " receipt(s).");
-        } catch (Exception exception) {
+        } catch (NumberFormatException exception) {
+            showError("Error", "Enter a valid year.");
+        } catch (EntityNotFoundException exception) {
             showError("Error", "Could not load receipts: " + exception.getMessage());
         }
     }
@@ -122,7 +119,7 @@ public class SalaryConsultingController {
         try {
             Files.write(file.toPath(), pdfGenerationService.generateSalaryReceiptPDF(row.getReceiptId()));
             statusText.setText("Saved " + file.getName());
-        } catch (Exception exception) {
+        } catch (JRException | IOException | EntityNotFoundException exception) {
             showError("Error", "Could not write the PDF: " + exception.getMessage());
         }
     }
@@ -141,28 +138,16 @@ public class SalaryConsultingController {
                     companyId, String.valueOf(monthComboBox.getValue()), Integer.parseInt(yearField.getText().trim()));
             Files.write(file.toPath(), pdf);
             statusText.setText("Saved " + file.getName());
-        } catch (Exception exception) {
+        } catch (NumberFormatException exception) {
+            showError("Error", "Enter a valid year.");
+        } catch (JRException | IOException | EntityNotFoundException exception) {
             showError("Error", "Could not write the PDF: " + exception.getMessage());
         }
     }
 
     @FXML
     private void goBackToMainMenu() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            MainMenuController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Calculator - " + companyName);
-        } catch (Exception exception) {
-            showError("Error", "Failed to return to the main menu: " + exception.getMessage());
-        }
+        screenNavigator.showMainMenu(backButton, companyId, companyName);
     }
 
     private void showError(String title, String message) {

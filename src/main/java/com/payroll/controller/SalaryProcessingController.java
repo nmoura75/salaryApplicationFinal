@@ -3,19 +3,13 @@ package com.payroll.controller;
 import com.payroll.dto.ProcessMonthResult;
 import com.payroll.service.SalaryReceiptService;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
@@ -25,9 +19,7 @@ import java.time.YearMonth;
 public class SalaryProcessingController {
 
     private final SalaryReceiptService salaryReceiptService;
-
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private Button backButton;
@@ -78,28 +70,16 @@ public class SalaryProcessingController {
                 message.append(".");
             }
             statusText.setText(message.toString());
-        } catch (Exception exception) {
+        } catch (NumberFormatException exception) {
+            showError("Error", "Enter a valid year.");
+        } catch (IllegalStateException exception) {
             showError("Error", "Could not create receipts: " + exception.getMessage());
         }
     }
 
     @FXML
     private void goBackToMainMenu() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            MainMenuController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Calculator - " + companyName);
-        } catch (Exception exception) {
-            showError("Error", "Failed to return to the main menu: " + exception.getMessage());
-        }
+        screenNavigator.showMainMenu(backButton, companyId, companyName);
     }
 
     private int selectedYear() {

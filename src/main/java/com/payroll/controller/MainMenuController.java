@@ -2,18 +2,12 @@ package com.payroll.controller;
 
 import com.payroll.service.CompanyService;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +17,7 @@ import java.util.List;
 public class MainMenuController {
 
     private final CompanyService companyService;
-
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private VBox menuContainer;
@@ -114,140 +106,49 @@ public class MainMenuController {
     
     @FXML
     private void goBackToCompanySelection() {
-        try {
-            companyService.closeCompany();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/CompanySelection.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Calculator - Company Selection");
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to return to company selection: " + e.getMessage());
-        }
+        companyService.closeCompany();
+        screenNavigator.showScreen(backButton, "/fxml/CompanySelection.fxml",
+                "Salary Calculator - Company Selection", controller -> { });
     }
 
     private void openEmployeesMenu() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EmployeesMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            EmployeesMenuController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) menuContainer.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Employees - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open employees menu: " + e.getMessage());
-        }
+        screenNavigator.<EmployeesMenuController>showScreen(menuContainer, "/fxml/EmployeesMenu.fxml",
+                "Employees - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void openSalaryPreparation() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SalaryPreparation.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            SalaryPreparationController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) menuContainer.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Preparation - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open salary preparation: " + e.getMessage());
-        }
+        screenNavigator.<SalaryPreparationController>showScreen(menuContainer, "/fxml/SalaryPreparation.fxml",
+                "Salary Preparation - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void openSalaryProcessing() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SalaryProcessing.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            SalaryProcessingController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) menuContainer.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Processing - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open salary processing: " + e.getMessage());
-        }
+        screenNavigator.<SalaryProcessingController>showScreen(menuContainer, "/fxml/SalaryProcessing.fxml",
+                "Salary Processing - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void openSalaryConsulting() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SalaryConsulting.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            SalaryConsultingController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) menuContainer.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Consulting - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open salary consulting: " + e.getMessage());
-        }
+        screenNavigator.<SalaryConsultingController>showScreen(menuContainer, "/fxml/SalaryConsulting.fxml",
+                "Salary Consulting - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void openGovernmentMaps() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/GovernmentMaps.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            GovernmentMapsController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) menuContainer.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Government Maps - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open government maps: " + e.getMessage());
-        }
-    }
-
-    private void showError(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        screenNavigator.<GovernmentMapsController>showScreen(menuContainer, "/fxml/GovernmentMaps.fxml",
+                "Government Maps - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
     
     // Inner class to represent menu cards

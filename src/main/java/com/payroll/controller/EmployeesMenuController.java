@@ -1,29 +1,22 @@
 package com.payroll.controller;
 
+import com.payroll.controller.ScreenNavigator.WindowSize;
 import com.payroll.model.Employee;
 import com.payroll.service.EmployeeService;
-import javafx.application.Platform;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.math.BigDecimal;
 
@@ -31,10 +24,21 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class EmployeesMenuController {
 
+    private static final WindowSize EMPLOYEE_DIALOG = new WindowSize(600, 800);
+    private static final WindowSize REMUNERATION_WINDOW = new WindowSize(800, 900);
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    // Employee dates are stored as free text, so several formats are accepted; tried in this order.
+    private static final List<DateTimeFormatter> STORED_DATE_FORMATS = List.of(
+        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+        DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+        DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+        DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+        DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    );
+
     private final EmployeeService employeeService;
-    
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ScreenNavigator screenNavigator;
 
     @FXML
     private Label companyNameText;
@@ -144,48 +148,8 @@ public class EmployeesMenuController {
             }
         });
         
-        // Format date columns
-        hireDateColumn.setCellFactory(column -> new TableCell<Employee, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null || item.isEmpty()) {
-                    setText(null);
-                } else {
-                    try {
-                        LocalDate date = parseDate(item);
-                        if (date != null) {
-                            setText(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                        } else {
-                            setText(item); // Display as-is if parsing fails
-                        }
-                    } catch (Exception e) {
-                        setText(item); // Display as-is if parsing fails
-                    }
-                }
-            }
-        });
-        
-        dateOfBirthColumn.setCellFactory(column -> new TableCell<Employee, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null || item.isEmpty()) {
-                    setText(null);
-                } else {
-                    try {
-                        LocalDate date = parseDate(item);
-                        if (date != null) {
-                            setText(date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                        } else {
-                            setText(item); // Display as-is if parsing fails
-                        }
-                    } catch (Exception e) {
-                        setText(item); // Display as-is if parsing fails
-                    }
-                }
-            }
-        });
+        hireDateColumn.setCellFactory(column -> createDateCell());
+        dateOfBirthColumn.setCellFactory(column -> createDateCell());
         
         // Format status column with color coding
         statusColumn.setCellFactory(column -> new TableCell<Employee, String>() {
@@ -212,9 +176,25 @@ public class EmployeesMenuController {
             editButton.setDisable(!hasSelection);
             deleteButton.setDisable(!hasSelection);
         });
-        
-        // Setup search functionality
-        setupSearch();
+    }
+
+    private TableCell<Employee, String> createDateCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.isEmpty()) {
+                    setText(null);
+                } else {
+                    setText(formatForDisplay(item));
+                }
+            }
+        };
+    }
+
+    private String formatForDisplay(String storedDate) {
+        LocalDate date = parseDate(storedDate);
+        return date == null ? storedDate : date.format(DISPLAY_DATE_FORMAT);
     }
 
     private void setupSearch() {
@@ -239,30 +219,18 @@ public class EmployeesMenuController {
         });
     }
 
-    private LocalDate parseDate(String dateStr) {
-        if (dateStr == null || dateStr.trim().isEmpty()) {
+    private LocalDate parseDate(String storedDate) {
+        if (storedDate == null || storedDate.trim().isEmpty()) {
             return null;
         }
-        
-        // Try different date formats
-        String[] formats = {
-            "yyyy-MM-dd",      // ISO format
-            "dd-MM-yyyy",      // European format with dashes
-            "dd/MM/yyyy",      // European format with slashes
-            "MM/dd/yyyy",      // US format
-            "yyyy/MM/dd"       // ISO format with slashes
-        };
-        
-        for (String format : formats) {
+        for (DateTimeFormatter format : STORED_DATE_FORMATS) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-                return LocalDate.parse(dateStr, formatter);
-            } catch (Exception e) {
-                // Continue to next format
+                return LocalDate.parse(storedDate, format);
+            } catch (DateTimeParseException notThisFormat) {
+                // Fall through to the next candidate format.
             }
         }
-        
-        return null; // Could not parse with any format
+        return null;
     }
     
     public void refreshEmployees() {
@@ -276,20 +244,15 @@ public class EmployeesMenuController {
                 employeesList.clear();
                 employeesList.addAll(employees);
                 
-                updateStatus("Loaded " + employees.size() + " employees", "success");
+                updateStatus("Loaded " + employees.size() + " employees");
             } else {
-                updateStatus("Company ID not set", "error");
+                updateStatus("Company ID not set");
             }
-        } catch (Exception e) {
-            updateStatus("Error loading employees: " + e.getMessage(), "error");
+        } catch (EntityNotFoundException exception) {
+            updateStatus("Error loading employees: " + exception.getMessage());
         }
     }
 
-    @FXML
-    private void searchEmployees() {
-        // Search is handled by the FilteredList
-    }
-    
     @FXML
     private void editSelectedEmployee() {
         Employee employee = employeesTable.getSelectionModel().getSelectedItem();
@@ -312,84 +275,29 @@ public class EmployeesMenuController {
 
     @FXML
     private void showAddEmployeeDialog() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AddEmployeeDialog.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            AddEmployeeDialogController controller = loader.getController();
-            controller.setParentController(this);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 600, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(backButton.getScene().getWindow());
-            dialog.setTitle("Add New Employee");
-            dialog.setScene(scene);
-            dialog.setResizable(false);
-            
-            dialog.showAndWait();
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open add employee dialog: " + e.getMessage());
-        }
+        screenNavigator.<AddEmployeeDialogController>showModalDialog(backButton, "/fxml/AddEmployeeDialog.fxml",
+                "Add New Employee", EMPLOYEE_DIALOG, controller -> {
+                    controller.setParentController(this);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     @FXML
     private void showRemunerationManagement() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/RemunerationManagement.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            RemunerationManagementController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 800, 900);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = new Stage();
-            stage.setTitle("Remuneration Management - " + companyName);
-            stage.setScene(scene);
-            stage.setResizable(false);
-            
-            stage.show();
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open remuneration management: " + e.getMessage());
-        }
+        screenNavigator.<RemunerationManagementController>openWindow("/fxml/RemunerationManagement.fxml",
+                "Remuneration Management - " + companyName, REMUNERATION_WINDOW, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void editEmployee(Employee employee) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EditEmployeeDialog.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            EditEmployeeDialogController controller = loader.getController();
-            controller.setParentController(this);
-            controller.setEmployee(employee);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 600, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage dialog = new Stage();
-            dialog.initModality(Modality.APPLICATION_MODAL);
-            dialog.initOwner(backButton.getScene().getWindow());
-            dialog.setTitle("Edit Employee");
-            dialog.setScene(scene);
-            dialog.setResizable(false);
-            
-            dialog.showAndWait();
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to open edit employee dialog: " + e.getMessage());
-        }
+        screenNavigator.<EditEmployeeDialogController>showModalDialog(backButton, "/fxml/EditEmployeeDialog.fxml",
+                "Edit Employee", EMPLOYEE_DIALOG, controller -> {
+                    controller.setParentController(this);
+                    controller.setEmployee(employee);
+                    controller.setCompanyName(companyName);
+                });
     }
 
     private void deleteEmployee(Employee employee) {
@@ -403,9 +311,9 @@ public class EmployeesMenuController {
                 try {
                     employeeService.deleteEmployee(employee.getId());
                     loadEmployees();
-                    updateStatus("Employee deleted successfully", "success");
-                } catch (Exception e) {
-                    showError("Error", "Failed to delete employee: " + e.getMessage());
+                    updateStatus("Employee deleted successfully");
+                } catch (EntityNotFoundException exception) {
+                    showError("Error", "Failed to delete employee: " + exception.getMessage());
                 }
             }
         });
@@ -413,33 +321,12 @@ public class EmployeesMenuController {
 
     @FXML
     private void goBackToMainMenu() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainMenu.fxml"));
-            loader.setControllerFactory(applicationContext::getBean);
-            Parent root = loader.load();
-            
-            MainMenuController controller = loader.getController();
-            controller.setCompanyId(companyId);
-            controller.setCompanyName(companyName);
-            
-            Scene scene = new Scene(root, 1200, 800);
-            scene.getStylesheets().add(getClass().getResource("/css/ios-style.css").toExternalForm());
-            
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(scene);
-            stage.setTitle("Salary Calculator - " + companyName);
-            
-        } catch (Exception e) {
-            showError("Error", "Failed to return to main menu: " + e.getMessage());
-        }
+        screenNavigator.showMainMenu(backButton, companyId, companyName);
     }
 
-
-
-    private void updateStatus(String message, String type) {
+    private void updateStatus(String message) {
         if (statusText != null) {
             statusText.setText(message);
-            // You can add styling based on type if needed
         }
     }
 

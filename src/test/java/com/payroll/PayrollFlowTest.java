@@ -1,5 +1,6 @@
 package com.payroll;
 
+import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Company;
@@ -100,8 +101,7 @@ class PayrollFlowTest {
         remunerationService.setMonthlyBusinessDays(company.getId(), 2026, 3, 20);
 
         List<RemunerationLine> lines = remunerationService.calculateLines(employee.getId(), company.getId(), 2026, 3);
-        PayrollResult expected = new PayrollCalculator().calculate(
-                employee.getBaseSalary(), lines, 0, employee.getIrsTable(), employee.getFamiliarSituation());
+        PayrollResult expected = new PayrollCalculator().calculate(PayrollInput.forEmployee(employee, lines));
         SalaryReceipt receipt = salaryReceiptService.createMonthlyReceipt(employee.getId(), 2026, 3);
 
         assertEquals(expected.getEmployeeSocialSecurity(), receipt.getSocialSecurityContribution());

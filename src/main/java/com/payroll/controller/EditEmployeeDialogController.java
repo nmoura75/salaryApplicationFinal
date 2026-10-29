@@ -2,6 +2,7 @@ package com.payroll.controller;
 
 import com.payroll.model.Employee;
 import com.payroll.service.EmployeeService;
+import jakarta.persistence.EntityNotFoundException;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 @Component
 @RequiredArgsConstructor
@@ -100,36 +102,15 @@ public class EditEmployeeDialogController {
             phoneField.setText(employee.getPhone() != null ? employee.getPhone() : "");
             baseSalaryField.setText(employee.getBaseSalary().toString());
             
-            // Convert String hire date to LocalDate for DatePicker
             if (employee.getHireDate() != null && !employee.getHireDate().isEmpty()) {
-                try {
-                    LocalDate hireDate = parseDate(employee.getHireDate());
-                    if (hireDate != null) {
-                        hireDatePicker.setValue(hireDate);
-                    } else {
-                        hireDatePicker.setValue(LocalDate.now());
-                    }
-                } catch (Exception e) {
-                    // If parsing fails, set to current date
-                    hireDatePicker.setValue(LocalDate.now());
-                }
+                LocalDate hireDate = parseDate(employee.getHireDate());
+                hireDatePicker.setValue(hireDate != null ? hireDate : LocalDate.now());
             }
             
             dependentsField.setText(String.valueOf(employee.getDependents()));
             
-            // Set date of birth - convert String to LocalDate
             if (employee.getDateOfBirth() != null && !employee.getDateOfBirth().isEmpty()) {
-                try {
-                    LocalDate dateOfBirth = parseDate(employee.getDateOfBirth());
-                    if (dateOfBirth != null) {
-                        dateOfBirthPicker.setValue(dateOfBirth);
-                    } else {
-                        dateOfBirthPicker.setValue(null);
-                    }
-                } catch (Exception e) {
-                    // If parsing fails, leave empty
-                    dateOfBirthPicker.setValue(null);
-                }
+                dateOfBirthPicker.setValue(parseDate(employee.getDateOfBirth()));
             }
             
             // Set familiar situation
@@ -254,8 +235,8 @@ public class EditEmployeeDialogController {
                 Platform.runLater(parentController::refreshEmployees);
             }
             
-        } catch (Exception e) {
-            showError("Error", "Failed to update employee: " + e.getMessage());
+        } catch (IllegalArgumentException | EntityNotFoundException exception) {
+            showError("Error", "Failed to update employee: " + exception.getMessage());
         }
     }
 
@@ -283,8 +264,8 @@ public class EditEmployeeDialogController {
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
                 return LocalDate.parse(dateStr, formatter);
-            } catch (Exception e) {
-                // Continue to next format
+            } catch (DateTimeParseException notThisFormat) {
+                // Fall through to the next candidate format.
             }
         }
         
