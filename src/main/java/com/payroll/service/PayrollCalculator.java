@@ -12,18 +12,13 @@ import java.util.List;
 
 /**
  * Single payroll calculation used by the employee preview and by monthly receipts.
- * Income tax is a temporary withholding method. Official retention tables replace
- * {@link #incomeTax} later. Madeira, Açores, and disability tables are not included.
+ * Income tax follows the 2026 Continente withholding tables. Madeira, Açores,
+ * and pension tables are not included.
  */
 @Component
 public class PayrollCalculator {
 
-    // Temporary brackets: the rate applies to the whole subject amount, not marginally.
-    private static final List<WithholdingBracket> WITHHOLDING_BRACKETS = List.of(
-            new WithholdingBracket(new BigDecimal("1000.00"), BigDecimal.ZERO),
-            new WithholdingBracket(new BigDecimal("2500.00"), new BigDecimal("0.15")),
-            new WithholdingBracket(new BigDecimal("5000.00"), new BigDecimal("0.25")));
-    private static final BigDecimal TOP_WITHHOLDING_RATE = new BigDecimal("0.35");
+    private final WithholdingTables withholdingTables = WithholdingTables.continente2026();
 
     public PayrollResult calculate(PayrollInput input) {
         BigDecimal baseSalary = money(input.baseSalary());
@@ -72,22 +67,8 @@ public class PayrollCalculator {
         return amount;
     }
 
-    /**
-     * Temporary withholding. {@code irsTable} and {@code familiarSituation} are unused until official tables are supplied.
-     */
     private BigDecimal incomeTax(BigDecimal subject, PayrollInput input) {
-        BigDecimal rate = withholdingRate(subject);
-        BigDecimal deduction = BigDecimal.valueOf(Math.max(input.dependents(), 0))
-                .multiply(PayrollConstants.DEPENDENT_DEDUCTION);
-        return money(subject.multiply(rate).subtract(deduction).max(BigDecimal.ZERO));
-    }
-
-    private BigDecimal withholdingRate(BigDecimal subject) {
-        return WITHHOLDING_BRACKETS.stream()
-                .filter(bracket -> subject.compareTo(bracket.upperLimit()) <= 0)
-                .map(WithholdingBracket::rate)
-                .findFirst()
-                .orElse(TOP_WITHHOLDING_RATE);
+        return withholdingTables.withhold(input.withholdingTable(), subject, input.dependents());
     }
 
     private static BigDecimal money(BigDecimal value) {
@@ -95,8 +76,5 @@ public class PayrollCalculator {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
         return value.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private record WithholdingBracket(BigDecimal upperLimit, BigDecimal rate) {
     }
 }

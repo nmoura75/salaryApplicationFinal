@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * Everything {@link com.payroll.service.PayrollCalculator} needs for one employee and month.
- * {@code withholdingTable} and {@code maritalStatus} are carried for the official withholding tables.
+ * {@code withholdingTable} selects the 2026 bracket. {@code maritalStatus} records the household.
  */
 public record PayrollInput(BigDecimal baseSalary,
                            List<RemunerationLine> remunerationLines,

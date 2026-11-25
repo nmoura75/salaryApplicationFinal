@@ -12,9 +12,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PayrollCalculatorTest {
 
@@ -25,30 +27,71 @@ class PayrollCalculatorTest {
     private final PayrollCalculator calculator = new PayrollCalculator();
 
     @Test
-    void baseSalaryOnlyAppliesSocialSecurityAndNoTaxUpToFirstBracket() {
+    void baseSalaryKeepsSocialSecuritySeparateFromWithholding() {
         PayrollResult result = calculate("1000.00", List.of(), NO_DEPENDENTS);
 
         assertEquals(money("1000.00"), result.getGross());
         assertEquals(money("1000.00"), result.getSubjectAmount());
         assertEquals(money("110.00"), result.getEmployeeSocialSecurity());
         assertEquals(money("237.50"), result.getEmployerSocialSecurity());
-        assertEquals(money("0.00"), result.getIncomeTax());
-        assertEquals(money("890.00"), result.getNet());
+        assertEquals(money("36.00"), result.getIncomeTax());
+        assertEquals(money("854.00"), result.getNet());
     }
 
-    @ParameterizedTest(name = "subject {0} -> income tax {1}")
+    @ParameterizedTest(name = "table {0} at {1} publishes {2}%")
     @CsvSource({
-            "1000.00, 0.00",
-            "1000.01, 150.00",
-            "2500.00, 375.00",
-            "2500.01, 625.00",
-            "5000.00, 1250.00",
-            "5000.01, 1750.00"
+            "TABLE_I, 920.00, 0.0",
+            "TABLE_I, 1042.00, 5.3",
+            "TABLE_I, 1108.00, 7.2",
+            "TABLE_I, 1819.00, 13.5",
+            "TABLE_III, 1042.00, 2.2",
+            "TABLE_III, 1962.00, 8.5",
+            "TABLE_IV, 2063.00, 3.8"
     })
-    void withholdingRateChangesAtEachBracketBoundary(String subject, String expectedTax) {
-        PayrollResult result = calculate(subject, List.of(), NO_DEPENDENTS);
+    void publishedEffectiveRateMatchesTheLimitWithNoDependents(WithholdingTable table, String remuneration,
+                                                               String publishedPercent) {
+        PayrollResult result = calculate(remuneration, List.of(), NO_DEPENDENTS, table);
+        BigDecimal percent = result.getIncomeTax()
+                .multiply(new BigDecimal("100"))
+                .divide(money(remuneration), 1, RoundingMode.HALF_UP);
 
-        assertEquals(money(expectedTax), result.getIncomeTax());
+        assertEquals(new BigDecimal(publishedPercent).setScale(1, RoundingMode.HALF_UP), percent);
+    }
+
+    @Test
+    void twoDependentsReduceTaxByTwiceTheTableParcel() {
+        PayrollResult withoutDependents = calculate("1819.00", List.of(), NO_DEPENDENTS, WithholdingTable.TABLE_II);
+        PayrollResult withDependents = calculate("1819.00", List.of(), 2, WithholdingTable.TABLE_II);
+
+        assertEquals(money("245.05"), withoutDependents.getIncomeTax());
+        assertEquals(money("176.47"), withDependents.getIncomeTax());
+    }
+
+    @Test
+    void dependentsDoNotChangeTableIvBelowThree() {
+        PayrollResult withoutDependents = calculate("2063.00", List.of(), NO_DEPENDENTS, WithholdingTable.TABLE_IV);
+        PayrollResult withDependents = calculate("2063.00", List.of(), 2, WithholdingTable.TABLE_IV);
+
+        assertEquals(money("78.23"), withoutDependents.getIncomeTax());
+        assertEquals(withoutDependents.getIncomeTax(), withDependents.getIncomeTax());
+    }
+
+    @Test
+    void thirdDependentLowersOnlyTheMarginalRate() {
+        PayrollResult twoDependents = calculate("2000.00", List.of(), 2);
+        PayrollResult threeDependents = calculate("2000.00", List.of(), 3);
+        PayrollResult formulaBracket = calculate("1108.00", List.of(), 3);
+
+        assertEquals(money("258.48"), twoDependents.getIncomeTax());
+        assertEquals(money("217.05"), threeDependents.getIncomeTax());
+        assertEquals(money("3.88"), formulaBracket.getIncomeTax());
+    }
+
+    @Test
+    void withholdingNeverGoesBelowZero() {
+        PayrollResult result = calculate("1042.00", List.of(), 3);
+
+        assertEquals(money("0.00"), result.getIncomeTax());
     }
 
     @Test
@@ -60,8 +103,8 @@ class PayrollCalculatorTest {
         assertEquals(money("1160.00"), result.getGross());
         assertEquals(money("1040.00"), result.getSubjectAmount());
         assertEquals(money("114.40"), result.getEmployeeSocialSecurity());
-        assertEquals(money("156.00"), result.getIncomeTax());
-        assertEquals(money("889.60"), result.getNet());
+        assertEquals(money("54.00"), result.getIncomeTax());
+        assertEquals(money("991.60"), result.getNet());
     }
 
     @Test
@@ -91,7 +134,7 @@ class PayrollCalculatorTest {
 
         assertEquals(money("1200.00"), result.getGross());
         assertEquals(money("1000.00"), result.getSubjectAmount());
-        assertEquals(money("1090.00"), result.getNet());
+        assertEquals(money("1054.00"), result.getNet());
     }
 
     @Test
@@ -102,20 +145,7 @@ class PayrollCalculatorTest {
 
         assertEquals(money("1500.00"), result.getGross());
         assertEquals(money("1500.00"), result.getSubjectAmount());
-    }
-
-    @Test
-    void eachDependentReducesIncomeTax() {
-        PayrollResult result = calculate("2000.00", List.of(), 2);
-
-        assertEquals(money("200.00"), result.getIncomeTax());
-    }
-
-    @Test
-    void dependentDeductionNeverMakesIncomeTaxNegative() {
-        PayrollResult result = calculate("1500.00", List.of(), 5);
-
-        assertEquals(money("0.00"), result.getIncomeTax());
+        assertEquals(money("168.17"), result.getIncomeTax());
     }
 
     @Test
@@ -131,18 +161,31 @@ class PayrollCalculatorTest {
     }
 
     @Test
+    void missingWithholdingTableIsRejected() {
+        PayrollInput input = new PayrollInput(money("1000.00"), List.of(), NO_DEPENDENTS, null, MARITAL_STATUS);
+
+        assertThrows(NullPointerException.class, () -> calculator.calculate(input));
+    }
+
+    @Test
     void employeeWithoutStoredDependentsIsCalculatedWithNone() {
         Employee employee = new Employee();
         employee.setBaseSalary(money("2000.00"));
         employee.setDependents(null);
+        employee.setWithholdingTable(WITHHOLDING_TABLE);
 
         PayrollResult result = calculator.calculate(PayrollInput.forEmployee(employee, List.of()));
 
-        assertEquals(money("300.00"), result.getIncomeTax());
+        assertEquals(money("301.34"), result.getIncomeTax());
     }
 
     private PayrollResult calculate(String baseSalary, List<RemunerationLine> lines, int dependents) {
-        PayrollInput input = new PayrollInput(money(baseSalary), lines, dependents, WITHHOLDING_TABLE, MARITAL_STATUS);
+        return calculate(baseSalary, lines, dependents, WITHHOLDING_TABLE);
+    }
+
+    private PayrollResult calculate(String baseSalary, List<RemunerationLine> lines, int dependents,
+                                    WithholdingTable table) {
+        PayrollInput input = new PayrollInput(money(baseSalary), lines, dependents, table, MARITAL_STATUS);
         return calculator.calculate(input);
     }
 

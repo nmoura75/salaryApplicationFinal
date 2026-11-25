@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WithholdingTableResolverTest {
 
@@ -39,10 +40,12 @@ class WithholdingTableResolverTest {
     }
 
     @Test
-    void olderHouseholdCodesAreReadAsNotMarried() {
+    void maritalStatusKeepsOneCodeForNotMarried() {
+        assertEquals(1, MaritalStatus.NOT_MARRIED.code());
+        assertEquals(2, MaritalStatus.MARRIED.code());
         assertEquals(MaritalStatus.NOT_MARRIED, MaritalStatus.fromCode(1));
         assertEquals(MaritalStatus.MARRIED, MaritalStatus.fromCode(2));
-        assertEquals(MaritalStatus.NOT_MARRIED, MaritalStatus.fromCode(3));
-        assertEquals(MaritalStatus.NOT_MARRIED, MaritalStatus.fromCode(4));
+        assertThrows(IllegalArgumentException.class, () -> MaritalStatus.fromCode(3));
+        assertThrows(IllegalArgumentException.class, () -> MaritalStatus.fromCode(4));
     }
 }
