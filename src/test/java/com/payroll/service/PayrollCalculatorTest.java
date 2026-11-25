@@ -4,7 +4,9 @@ import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Employee;
+import com.payroll.model.MaritalStatus;
 import com.payroll.model.RemunerationCategory.ContributionRule;
+import com.payroll.model.WithholdingTable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class PayrollCalculatorTest {
 
     private static final int NO_DEPENDENTS = 0;
-    private static final Integer IRS_TABLE = 1;
-    private static final Integer FAMILIAR_SITUATION = 1;
+    private static final WithholdingTable WITHHOLDING_TABLE = WithholdingTable.TABLE_I;
+    private static final MaritalStatus MARITAL_STATUS = MaritalStatus.NOT_MARRIED;
 
     private final PayrollCalculator calculator = new PayrollCalculator();
 
@@ -118,7 +120,7 @@ class PayrollCalculatorTest {
 
     @Test
     void missingSalaryAndLinesProduceZeroAmounts() {
-        PayrollInput input = new PayrollInput(null, null, NO_DEPENDENTS, IRS_TABLE, FAMILIAR_SITUATION);
+        PayrollInput input = new PayrollInput(null, null, NO_DEPENDENTS, WITHHOLDING_TABLE, MARITAL_STATUS);
 
         PayrollResult result = calculator.calculate(input);
 
@@ -140,7 +142,7 @@ class PayrollCalculatorTest {
     }
 
     private PayrollResult calculate(String baseSalary, List<RemunerationLine> lines, int dependents) {
-        PayrollInput input = new PayrollInput(money(baseSalary), lines, dependents, IRS_TABLE, FAMILIAR_SITUATION);
+        PayrollInput input = new PayrollInput(money(baseSalary), lines, dependents, WITHHOLDING_TABLE, MARITAL_STATUS);
         return calculator.calculate(input);
     }
 

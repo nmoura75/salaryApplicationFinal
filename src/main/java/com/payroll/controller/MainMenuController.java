@@ -1,5 +1,6 @@
 package com.payroll.controller;
 
+import com.payroll.config.Messages;
 import com.payroll.service.CompanyService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -18,6 +19,7 @@ public class MainMenuController {
 
     private final CompanyService companyService;
     private final ScreenNavigator screenNavigator;
+    private final Messages messages;
 
     @FXML
     private VBox menuContainer;
@@ -57,6 +59,8 @@ public class MainMenuController {
         menuCards.add(new MenuCard("💰", "Salary Processing", "Process and generate receipts", this::openSalaryProcessing));
         menuCards.add(new MenuCard("📋", "Salary Consulting", "View salary reports", this::openSalaryConsulting));
         menuCards.add(new MenuCard("🏛️", "Government Maps", "Generate government reports", this::openGovernmentMaps));
+        menuCards.add(new MenuCard("⚙", messages.text("menu.configuration.title"),
+                messages.text("menu.configuration.description"), this::openConfiguration));
         
         // Create horizontal rows with max 4 cards per row
         int maxCardsPerRow = 4;
@@ -146,6 +150,14 @@ public class MainMenuController {
     private void openGovernmentMaps() {
         screenNavigator.<GovernmentMapsController>showScreen(menuContainer, "/fxml/GovernmentMaps.fxml",
                 "Government Maps - " + companyName, controller -> {
+                    controller.setCompanyId(companyId);
+                    controller.setCompanyName(companyName);
+                });
+    }
+
+    private void openConfiguration() {
+        screenNavigator.<ConfigurationController>showScreen(menuContainer, "/fxml/Configuration.fxml",
+                messages.text("menu.configuration.title") + " - " + companyName, controller -> {
                     controller.setCompanyId(companyId);
                     controller.setCompanyName(companyName);
                 });

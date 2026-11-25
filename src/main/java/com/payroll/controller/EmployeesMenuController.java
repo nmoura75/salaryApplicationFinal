@@ -1,93 +1,82 @@
 package com.payroll.controller;
 
+import com.payroll.config.Messages;
 import com.payroll.controller.ScreenNavigator.WindowSize;
+import com.payroll.i18n.MessageKeys;
+import com.payroll.model.ContractType;
 import com.payroll.model.Employee;
+import com.payroll.model.EmploymentStatus;
+import com.payroll.model.WithholdingTable;
 import com.payroll.service.EmployeeService;
+import com.payroll.service.StoredDates;
 import jakarta.persistence.EntityNotFoundException;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.text.Text;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class EmployeesMenuController {
 
-    private static final WindowSize EMPLOYEE_DIALOG = new WindowSize(600, 800);
+    private static final WindowSize EMPLOYEE_DIALOG = new WindowSize(900, 700);
     private static final WindowSize REMUNERATION_WINDOW = new WindowSize(800, 900);
-    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-    // Employee dates are stored as free text, so several formats are accepted; tried in this order.
-    private static final List<DateTimeFormatter> STORED_DATE_FORMATS = List.of(
-        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
-        DateTimeFormatter.ofPattern("dd-MM-yyyy"),
-        DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-        DateTimeFormatter.ofPattern("MM/dd/yyyy"),
-        DateTimeFormatter.ofPattern("yyyy/MM/dd")
-    );
 
     private final EmployeeService employeeService;
     private final ScreenNavigator screenNavigator;
+    private final Messages messages;
 
     @FXML
     private Label companyNameText;
-    
     @FXML
     private Button backButton;
-    
     @FXML
     private TableView<Employee> employeesTable;
-    
     @FXML
     private TableColumn<Employee, Integer> idColumn;
-    
     @FXML
     private TableColumn<Employee, String> nameColumn;
-    
     @FXML
     private TableColumn<Employee, String> taxIdColumn;
-    
     @FXML
     private TableColumn<Employee, String> socialSecurityIdColumn;
-    
     @FXML
     private TableColumn<Employee, String> dateOfBirthColumn;
-    
     @FXML
     private TableColumn<Employee, BigDecimal> baseSalaryColumn;
-    
     @FXML
     private TableColumn<Employee, String> hireDateColumn;
-    
     @FXML
     private TableColumn<Employee, Integer> dependentsColumn;
-    
     @FXML
-    private TableColumn<Employee, Integer> irsTableColumn;
-    
+    private TableColumn<Employee, WithholdingTable> withholdingTableColumn;
     @FXML
-    private TableColumn<Employee, String> statusColumn;
-    
+    private TableColumn<Employee, EmploymentStatus> statusColumn;
+    @FXML
+    private TableColumn<Employee, ContractType> contractTypeColumn;
+    @FXML
+    private TableColumn<Employee, String> professionColumn;
     @FXML
     private Button editButton;
-    
     @FXML
     private Button deleteButton;
-    
     @FXML
     private Text statusText;
-    
     @FXML
     private TextField searchField;
 
@@ -107,70 +96,63 @@ public class EmployeesMenuController {
         if (companyNameText != null) {
             companyNameText.setText(companyName);
         }
-        // If companyId is already set, load employees immediately
         if (this.companyId != null) {
             loadEmployees();
         }
     }
-    
+
     public void setCompanyId(Integer companyId) {
         this.companyId = companyId;
-        // Load employees after both company name and ID are set
         if (this.companyName != null && this.companyId != null) {
             loadEmployees();
         }
     }
 
     private void setupTable() {
-        // Setup table columns
         idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(
-            data.getValue().getFirstName() + " " + data.getValue().getLastName()));
+                data.getValue().getFirstName() + " " + data.getValue().getLastName()));
         taxIdColumn.setCellValueFactory(new PropertyValueFactory<>("taxId"));
         socialSecurityIdColumn.setCellValueFactory(new PropertyValueFactory<>("socialSecurityId"));
         baseSalaryColumn.setCellValueFactory(new PropertyValueFactory<>("baseSalary"));
         hireDateColumn.setCellValueFactory(new PropertyValueFactory<>("hireDate"));
         dateOfBirthColumn.setCellValueFactory(new PropertyValueFactory<>("dateOfBirth"));
         dependentsColumn.setCellValueFactory(new PropertyValueFactory<>("dependents"));
-        irsTableColumn.setCellValueFactory(new PropertyValueFactory<>("irsTable"));
+        withholdingTableColumn.setCellValueFactory(new PropertyValueFactory<>("withholdingTable"));
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
-        
-        // Format salary column
-        baseSalaryColumn.setCellFactory(column -> new TableCell<Employee, BigDecimal>() {
+        contractTypeColumn.setCellValueFactory(new PropertyValueFactory<>("contractType"));
+        professionColumn.setCellValueFactory(new PropertyValueFactory<>("position"));
+
+        baseSalaryColumn.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(BigDecimal item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText("€" + item.toString());
-                }
+                setText(empty || item == null ? null : "€" + item.toPlainString());
             }
         });
-        
+
         hireDateColumn.setCellFactory(column -> createDateCell());
         dateOfBirthColumn.setCellFactory(column -> createDateCell());
-        
-        // Format status column with color coding
-        statusColumn.setCellFactory(column -> new TableCell<Employee, String>() {
+        withholdingTableColumn.setCellFactory(column -> createEnumCell());
+        contractTypeColumn.setCellFactory(column -> createEnumCell());
+        statusColumn.setCellFactory(column -> new TableCell<>() {
             @Override
-            protected void updateItem(String item, boolean empty) {
+            protected void updateItem(EmploymentStatus item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
                     setStyle("");
+                    return;
+                }
+                setText(messages.enumText(item));
+                if (item == EmploymentStatus.ACTIVE) {
+                    setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                 } else {
-                    setText(item);
-                    if ("ACTIVE".equals(item)) {
-                        setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    } else {
-                        setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                    }
+                    setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                 }
             }
         });
-        
-        // Setup table selection listener
+
         employeesTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             boolean hasSelection = newValue != null;
             editButton.setDisable(!hasSelection);
@@ -183,103 +165,91 @@ public class EmployeesMenuController {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null || item.isEmpty()) {
-                    setText(null);
-                } else {
-                    setText(formatForDisplay(item));
-                }
+                setText(empty || item == null || item.isEmpty() ? null : StoredDates.display(item));
             }
         };
     }
 
-    private String formatForDisplay(String storedDate) {
-        LocalDate date = parseDate(storedDate);
-        return date == null ? storedDate : date.format(DISPLAY_DATE_FORMAT);
+    private <E extends Enum<E>> TableCell<Employee, E> createEnumCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(E item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : messages.enumText(item));
+            }
+        };
     }
 
     private void setupSearch() {
         employeesList = FXCollections.observableArrayList();
-        filteredEmployees = new FilteredList<>(employeesList, p -> true);
+        filteredEmployees = new FilteredList<>(employeesList, employee -> true);
         employeesTable.setItems(filteredEmployees);
-        
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredEmployees.setPredicate(employee -> {
-                if (newValue == null || newValue.isEmpty()) {
-                    return true;
-                }
-                
-                String lowerCaseFilter = newValue.toLowerCase();
-                return employee.getFirstName().toLowerCase().contains(lowerCaseFilter) ||
-                       employee.getLastName().toLowerCase().contains(lowerCaseFilter) ||
-                       employee.getTaxId().toLowerCase().contains(lowerCaseFilter) ||
-                       employee.getSocialSecurityId().toLowerCase().contains(lowerCaseFilter) ||
-                       (employee.getDateOfBirth() != null && employee.getDateOfBirth().toString().toLowerCase().contains(lowerCaseFilter)) ||
-                       (employee.getStatus() != null && employee.getStatus().toLowerCase().contains(lowerCaseFilter));
-            });
-        });
+
+        searchField.textProperty().addListener((observable, oldValue, newValue) ->
+                filteredEmployees.setPredicate(employee -> matchesSearch(employee, newValue)));
     }
 
-    private LocalDate parseDate(String storedDate) {
-        if (storedDate == null || storedDate.trim().isEmpty()) {
-            return null;
+    private boolean matchesSearch(Employee employee, String query) {
+        if (query == null || query.isBlank()) {
+            return true;
         }
-        for (DateTimeFormatter format : STORED_DATE_FORMATS) {
-            try {
-                return LocalDate.parse(storedDate, format);
-            } catch (DateTimeParseException notThisFormat) {
-                // Fall through to the next candidate format.
-            }
-        }
-        return null;
+        String filter = query.toLowerCase();
+        return contains(employee.getFirstName(), filter)
+                || contains(employee.getLastName(), filter)
+                || contains(employee.getTaxId(), filter)
+                || contains(employee.getSocialSecurityId(), filter)
+                || contains(employee.getDateOfBirth(), filter)
+                || contains(employee.getPosition(), filter)
+                || contains(messages.enumText(employee.getStatus()), filter)
+                || contains(messages.enumText(employee.getContractType()), filter);
     }
-    
+
+    private static boolean contains(String value, String filter) {
+        return value != null && value.toLowerCase().contains(filter);
+    }
+
     public void refreshEmployees() {
         loadEmployees();
     }
-    
+
     private void loadEmployees() {
         try {
-            if (companyId != null) {
-                List<Employee> employees = employeeService.getEmployeesByCompany(companyId);
-                employeesList.clear();
-                employeesList.addAll(employees);
-                
-                updateStatus("Loaded " + employees.size() + " employees");
-            } else {
-                updateStatus("Company ID not set");
+            if (companyId == null) {
+                updateStatus(messages.text(MessageKeys.COMPANY_MISSING));
+                return;
             }
+            List<Employee> employees = employeeService.getEmployeesByCompany(companyId);
+            employeesList.clear();
+            employeesList.addAll(employees);
+            updateStatus(messages.format(MessageKeys.LOADED_EMPLOYEES, employees.size()));
         } catch (EntityNotFoundException exception) {
-            updateStatus("Error loading employees: " + exception.getMessage());
+            updateStatus(messages.format(MessageKeys.LOAD_FAILED, exception.getMessage()));
         }
     }
 
     @FXML
     private void editSelectedEmployee() {
         Employee employee = employeesTable.getSelectionModel().getSelectedItem();
-        if (employee != null) {
-            editEmployee(employee);
-        } else {
-            showError("Error", "Please select an employee to edit.");
+        if (employee == null) {
+            showError(messages.text(MessageKeys.ERROR_TITLE), messages.text(MessageKeys.SELECT_EMPLOYEE));
+            return;
         }
+        showEmployeeForm(employee);
     }
-    
+
     @FXML
     private void deleteSelectedEmployee() {
         Employee employee = employeesTable.getSelectionModel().getSelectedItem();
-        if (employee != null) {
-            deleteEmployee(employee);
-        } else {
-            showError("Error", "Please select an employee to delete.");
+        if (employee == null) {
+            showError(messages.text(MessageKeys.ERROR_TITLE), messages.text(MessageKeys.SELECT_EMPLOYEE));
+            return;
         }
+        deleteEmployee(employee);
     }
 
     @FXML
     private void showAddEmployeeDialog() {
-        screenNavigator.<AddEmployeeDialogController>showModalDialog(backButton, "/fxml/AddEmployeeDialog.fxml",
-                "Add New Employee", EMPLOYEE_DIALOG, controller -> {
-                    controller.setParentController(this);
-                    controller.setCompanyName(companyName);
-                });
+        showEmployeeForm(null);
     }
 
     @FXML
@@ -291,30 +261,38 @@ public class EmployeesMenuController {
                 });
     }
 
-    private void editEmployee(Employee employee) {
-        screenNavigator.<EditEmployeeDialogController>showModalDialog(backButton, "/fxml/EditEmployeeDialog.fxml",
-                "Edit Employee", EMPLOYEE_DIALOG, controller -> {
+    private void showEmployeeForm(Employee employee) {
+        String title = messages.text(employee == null ? MessageKeys.ADD_EMPLOYEE : MessageKeys.EDIT_EMPLOYEE);
+        screenNavigator.<EmployeeFormDialogController>showModalDialog(backButton, "/fxml/EmployeeFormDialog.fxml",
+                title, EMPLOYEE_DIALOG, controller -> {
                     controller.setParentController(this);
-                    controller.setEmployee(employee);
-                    controller.setCompanyName(companyName);
+                    controller.setCompany(companyId, companyName);
+                    if (employee == null) {
+                        controller.prepareNew();
+                    } else {
+                        controller.setEmployee(employee);
+                    }
                 });
     }
 
     private void deleteEmployee(Employee employee) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Delete");
-        alert.setHeaderText("Delete Employee");
-        alert.setContentText("Are you sure you want to delete " + employee.getFirstName() + " " + employee.getLastName() + "?");
-        
+        alert.setTitle(messages.text(MessageKeys.CONFIRM_DELETE_TITLE));
+        alert.setHeaderText(messages.text(MessageKeys.CONFIRM_DELETE_HEADER));
+        alert.setContentText(messages.format(MessageKeys.CONFIRM_DELETE_CONTENT,
+                employee.getFirstName() + " " + employee.getLastName()));
+
         alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                try {
-                    employeeService.deleteEmployee(employee.getId());
-                    loadEmployees();
-                    updateStatus("Employee deleted successfully");
-                } catch (EntityNotFoundException exception) {
-                    showError("Error", "Failed to delete employee: " + exception.getMessage());
-                }
+            if (response != ButtonType.OK) {
+                return;
+            }
+            try {
+                employeeService.deleteEmployee(employee.getId());
+                loadEmployees();
+                updateStatus(messages.text(MessageKeys.EMPLOYEE_DELETED));
+            } catch (EntityNotFoundException exception) {
+                showError(messages.text(MessageKeys.ERROR_TITLE),
+                        messages.format(MessageKeys.DELETE_FAILED, exception.getMessage()));
             }
         });
     }

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="16" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.payroll.controller.EmployeeFormDialogController">
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <Text fx:id="titleText" styleClass="title" text="%employee.form.title"/>
+    <Label fx:id="companyNameText" styleClass="label subtitle"/>
+
+    <TabPane tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <tabs>
+            <Tab text="%employee.tab.personal">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="16" right="8" bottom="8" left="8"/>
+                        </padding>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.firstName" styleClass="label"/>
+                                <TextField fx:id="firstNameField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.lastName" styleClass="label"/>
+                                <TextField fx:id="lastNameField"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.taxId" styleClass="label"/>
+                                <TextField fx:id="taxIdField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.socialSecurityId" styleClass="label"/>
+                                <TextField fx:id="socialSecurityIdField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.dateOfBirth" styleClass="label"/>
+                                <DatePicker fx:id="dateOfBirthPicker"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.gender" styleClass="label"/>
+                                <ComboBox fx:id="genderCombo" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.nationality" styleClass="label"/>
+                                <ComboBox fx:id="nationalityCombo" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
+                        <VBox spacing="5">
+                            <Label text="%employee.address" styleClass="label"/>
+                            <TextField fx:id="addressField"/>
+                        </VBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.postalCode" styleClass="label"/>
+                                <TextField fx:id="postalCodeField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.locality" styleClass="label"/>
+                                <TextField fx:id="localityField"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.email" styleClass="label"/>
+                                <TextField fx:id="emailField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.phone" styleClass="label"/>
+                                <TextField fx:id="phoneField"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+            <Tab text="%employee.tab.contract">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="16" right="8" bottom="8" left="8"/>
+                        </padding>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.status" styleClass="label"/>
+                                <ComboBox fx:id="statusCombo" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.contractType" styleClass="label"/>
+                                <ComboBox fx:id="contractTypeCombo" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.workingTime" styleClass="label"/>
+                                <ComboBox fx:id="workingTimeCombo" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.profession" styleClass="label"/>
+                                <TextField fx:id="professionField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.department" styleClass="label"/>
+                                <TextField fx:id="departmentField"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.hireDate" styleClass="label"/>
+                                <DatePicker fx:id="hireDatePicker"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.contractEndDate" styleClass="label"/>
+                                <DatePicker fx:id="contractEndDatePicker"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.terminationDate" styleClass="label"/>
+                                <DatePicker fx:id="terminationDatePicker"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.terminationReason" styleClass="label"/>
+                                <ComboBox fx:id="terminationReasonCombo" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+            <Tab text="%employee.tab.tax">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="16" right="8" bottom="8" left="8"/>
+                        </padding>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.maritalStatus" styleClass="label"/>
+                                <ComboBox fx:id="maritalStatusCombo" maxWidth="Infinity"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.incomeHolders" styleClass="label"/>
+                                <ComboBox fx:id="incomeHoldersCombo" maxWidth="Infinity"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.dependents" styleClass="label"/>
+                                <Spinner fx:id="dependentsSpinner" editable="true"/>
+                            </VBox>
+                            <VBox spacing="5" alignment="BOTTOM_LEFT" HBox.hgrow="ALWAYS">
+                                <CheckBox fx:id="disabilityCheck" text="%employee.disability"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.baseSalary" styleClass="label"/>
+                                <TextField fx:id="baseSalaryField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.withholdingTable" styleClass="label"/>
+                                <Label fx:id="withholdingTableLabel" styleClass="label subtitle"/>
+                            </VBox>
+                        </HBox>
+                        <VBox spacing="8">
+                            <Label text="%employee.monthlyIncome" styleClass="label subtitle"/>
+                            <Label text="%employee.monthlyIncomeNote" styleClass="label" wrapText="true"/>
+                            <HBox spacing="12" alignment="BOTTOM_LEFT">
+                                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                    <Label text="%employee.incomeType" styleClass="label"/>
+                                    <ComboBox fx:id="incomeTypeCombo" maxWidth="Infinity"/>
+                                </VBox>
+                                <VBox spacing="5">
+                                    <Label text="%employee.incomeAmount" styleClass="label"/>
+                                    <TextField fx:id="incomeAmountField" prefWidth="140"/>
+                                </VBox>
+                                <Button text="%action.add" onAction="#addMonthlyIncome" styleClass="secondary-button"/>
+                            </HBox>
+                            <TableView fx:id="monthlyIncomeTable" prefHeight="180"/>
+                        </VBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+            <Tab text="%employee.tab.bank">
+                <ScrollPane fitToWidth="true">
+                    <VBox spacing="12">
+                        <padding>
+                            <Insets top="16" right="8" bottom="8" left="8"/>
+                        </padding>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.bankName" styleClass="label"/>
+                                <TextField fx:id="bankNameField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.iban" styleClass="label"/>
+                                <TextField fx:id="ibanField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.swift" styleClass="label"/>
+                                <TextField fx:id="swiftField"/>
+                            </VBox>
+                        </HBox>
+                        <HBox spacing="15">
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.insurer" styleClass="label"/>
+                                <TextField fx:id="insurerField"/>
+                            </VBox>
+                            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                                <Label text="%employee.policyNumber" styleClass="label"/>
+                                <TextField fx:id="policyNumberField"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </ScrollPane>
+            </Tab>
+        </tabs>
+    </TabPane>
+
+    <HBox spacing="15" alignment="CENTER_RIGHT">
+        <Button text="%action.cancel" styleClass="button secondary" onAction="#cancel"/>
+        <Button text="%action.save" styleClass="button" onAction="#save"/>
+    </HBox>
+</VBox>

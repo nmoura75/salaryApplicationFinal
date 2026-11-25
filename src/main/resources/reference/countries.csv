@@ -1,0 +1,251 @@
+code;name_pt;name_en
+AF;Afeganistão;Afghanistan
+AL;Albânia;Albania
+DZ;Argélia;Algeria
+AD;Andorra;Andorra
+AO;Angola;Angola
+AG;Antígua e Barbuda;Antigua and Barbuda
+AR;Argentina;Argentina
+AM;Arménia;Armenia
+AU;Austrália;Australia
+AT;Áustria;Austria
+AZ;Azerbaijão;Azerbaijan
+BS;Bahamas;Bahamas
+BH;Barém;Bahrain
+BD;Bangladeche;Bangladesh
+BB;Barbados;Barbados
+BY;Bielorrússia;Belarus
+BE;Bélgica;Belgium
+BZ;Belize;Belize
+BJ;Benim;Benin
+BT;Butão;Bhutan
+BO;Bolívia;Bolivia
+BA;Bósnia e Herzegovina;Bosnia and Herzegovina
+BW;Botsuana;Botswana
+BR;Brasil;Brazil
+BN;Brunei;Brunei
+BG;Bulgária;Bulgaria
+BF;Burquina Faso;Burkina Faso
+BI;Burundi;Burundi
+CV;Cabo Verde;Cabo Verde
+KH;Camboja;Cambodia
+CM;Camarões;Cameroon
+CA;Canadá;Canada
+CF;República Centro-Africana;Central African Republic
+TD;Chade;Chad
+CL;Chile;Chile
+CN;China;China
+CO;Colômbia;Colombia
+KM;Comores;Comoros
+CG;Congo;Congo
+CD;República Democrática do Congo;Democratic Republic of the Congo
+CR;Costa Rica;Costa Rica
+CI;Costa do Marfim;Côte d'Ivoire
+HR;Croácia;Croatia
+CU;Cuba;Cuba
+CY;Chipre;Cyprus
+CZ;Chéquia;Czechia
+DK;Dinamarca;Denmark
+DJ;Jibuti;Djibouti
+DM;Domínica;Dominica
+DO;República Dominicana;Dominican Republic
+EC;Equador;Ecuador
+EG;Egito;Egypt
+SV;El Salvador;El Salvador
+GQ;Guiné Equatorial;Equatorial Guinea
+ER;Eritreia;Eritrea
+EE;Estónia;Estonia
+SZ;Essuatíni;Eswatini
+ET;Etiópia;Ethiopia
+FJ;Fiji;Fiji
+FI;Finlândia;Finland
+FR;França;France
+GA;Gabão;Gabon
+GM;Gâmbia;Gambia
+GE;Geórgia;Georgia
+DE;Alemanha;Germany
+GH;Gana;Ghana
+GR;Grécia;Greece
+GD;Granada;Grenada
+GT;Guatemala;Guatemala
+GN;Guiné;Guinea
+GW;Guiné-Bissau;Guinea-Bissau
+GY;Guiana;Guyana
+HT;Haiti;Haiti
+HN;Honduras;Honduras
+HU;Hungria;Hungary
+IS;Islândia;Iceland
+IN;Índia;India
+ID;Indonésia;Indonesia
+IR;Irão;Iran
+IQ;Iraque;Iraq
+IE;Irlanda;Ireland
+IL;Israel;Israel
+IT;Itália;Italy
+JM;Jamaica;Jamaica
+JP;Japão;Japan
+JO;Jordânia;Jordan
+KZ;Cazaquistão;Kazakhstan
+KE;Quénia;Kenya
+KI;Quiribati;Kiribati
+KP;Coreia do Norte;North Korea
+KR;Coreia do Sul;South Korea
+KW;Koweit;Kuwait
+KG;Quirguistão;Kyrgyzstan
+LA;Laos;Laos
+LV;Letónia;Latvia
+LB;Líbano;Lebanon
+LS;Lesoto;Lesotho
+LR;Libéria;Liberia
+LY;Líbia;Libya
+LI;Listenstaine;Liechtenstein
+LT;Lituânia;Lithuania
+LU;Luxemburgo;Luxembourg
+MG;Madagáscar;Madagascar
+MW;Maláui;Malawi
+MY;Malásia;Malaysia
+MV;Maldivas;Maldives
+ML;Mali;Mali
+MT;Malta;Malta
+MH;Ilhas Marshall;Marshall Islands
+MR;Mauritânia;Mauritania
+MU;Maurícia;Mauritius
+MX;México;Mexico
+FM;Micronésia;Micronesia
+MD;Moldávia;Moldova
+MC;Mónaco;Monaco
+MN;Mongólia;Mongolia
+ME;Montenegro;Montenegro
+MA;Marrocos;Morocco
+MZ;Moçambique;Mozambique
+MM;Mianmar;Myanmar
+NA;Namíbia;Namibia
+NR;Nauru;Nauru
+NP;Nepal;Nepal
+NL;Países Baixos;Netherlands
+NZ;Nova Zelândia;New Zealand
+NI;Nicarágua;Nicaragua
+NE;Níger;Niger
+NG;Nigéria;Nigeria
+MK;Macedónia do Norte;North Macedonia
+NO;Noruega;Norway
+OM;Omã;Oman
+PK;Paquistão;Pakistan
+PW;Palau;Palau
+PA;Panamá;Panama
+PG;Papua-Nova Guiné;Papua New Guinea
+PY;Paraguai;Paraguay
+PE;Peru;Peru
+PH;Filipinas;Philippines
+PL;Polónia;Poland
+PT;Portugal;Portugal
+QA;Catar;Qatar
+RO;Roménia;Romania
+RU;Rússia;Russia
+RW;Ruanda;Rwanda
+KN;São Cristóvão e Neves;Saint Kitts and Nevis
+LC;Santa Lúcia;Saint Lucia
+VC;São Vicente e Granadinas;Saint Vincent and the Grenadines
+WS;Samoa;Samoa
+SM;São Marinho;San Marino
+ST;São Tomé e Príncipe;Sao Tome and Principe
+SA;Arábia Saudita;Saudi Arabia
+SN;Senegal;Senegal
+RS;Sérvia;Serbia
+SC;Seicheles;Seychelles
+SL;Serra Leoa;Sierra Leone
+SG;Singapura;Singapore
+SK;Eslováquia;Slovakia
+SI;Eslovénia;Slovenia
+SB;Ilhas Salomão;Solomon Islands
+SO;Somália;Somalia
+ZA;África do Sul;South Africa
+SS;Sudão do Sul;South Sudan
+ES;Espanha;Spain
+LK;Sri Lanca;Sri Lanka
+SD;Sudão;Sudan
+SR;Suriname;Suriname
+SE;Suécia;Sweden
+CH;Suíça;Switzerland
+SY;Síria;Syria
+TJ;Tajiquistão;Tajikistan
+TZ;Tanzânia;Tanzania
+TH;Tailândia;Thailand
+TL;Timor-Leste;Timor-Leste
+TG;Togo;Togo
+TO;Tonga;Tonga
+TT;Trindade e Tobago;Trinidad and Tobago
+TN;Tunísia;Tunisia
+TR;Turquia;Türkiye
+TM;Turquemenistão;Turkmenistan
+TV;Tuvalu;Tuvalu
+UG;Uganda;Uganda
+UA;Ucrânia;Ukraine
+AE;Emirados Árabes Unidos;United Arab Emirates
+GB;Reino Unido;United Kingdom
+US;Estados Unidos;United States
+UY;Uruguai;Uruguay
+UZ;Usbequistão;Uzbekistan
+VU;Vanuatu;Vanuatu
+VE;Venezuela;Venezuela
+VN;Vietname;Vietnam
+YE;Iémen;Yemen
+ZM;Zâmbia;Zambia
+ZW;Zimbabué;Zimbabwe
+VA;Vaticano;Holy See
+PS;Palestina;Palestine
+XK;Kosovo;Kosovo
+TW;Taiwan;Taiwan
+HK;Hong Kong;Hong Kong
+MO;Macau;Macao
+GL;Gronelândia;Greenland
+PR;Porto Rico;Puerto Rico
+FO;Ilhas Faroé;Faroe Islands
+GI;Gibraltar;Gibraltar
+AQ;Antártida;Antarctica
+AS;Samoa Americana;American Samoa
+AI;Anguila;Anguilla
+AW;Aruba;Aruba
+BM;Bermudas;Bermuda
+BQ;Países Baixos Caribenhos;Bonaire, Sint Eustatius and Saba
+BV;Ilha Bouvet;Bouvet Island
+IO;Território Britânico do Oceano Índico;British Indian Ocean Territory
+VG;Ilhas Virgens Britânicas;British Virgin Islands
+KY;Ilhas Caimão;Cayman Islands
+CX;Ilha do Natal;Christmas Island
+CC;Ilhas Cocos;Cocos Islands
+CK;Ilhas Cook;Cook Islands
+CW;Curaçau;Curaçao
+FK;Ilhas Malvinas;Falkland Islands
+GF;Guiana Francesa;French Guiana
+PF;Polinésia Francesa;French Polynesia
+TF;Terras Austrais Francesas;French Southern Territories
+GP;Guadalupe;Guadeloupe
+GU;Guame;Guam
+GG;Guernesey;Guernsey
+HM;Ilhas Heard e McDonald;Heard Island and McDonald Islands
+IM;Ilha de Man;Isle of Man
+JE;Jersey;Jersey
+MQ;Martinica;Martinique
+YT;Maiote;Mayotte
+MS;Monserrate;Montserrat
+NC;Nova Caledónia;New Caledonia
+NU;Niue;Niue
+NF;Ilha Norfolk;Norfolk Island
+MP;Ilhas Marianas do Norte;Northern Mariana Islands
+PN;Ilhas Pitcairn;Pitcairn
+RE;Reunião;Réunion
+BL;São Bartolomeu;Saint Barthélemy
+SH;Santa Helena;Saint Helena
+MF;São Martinho;Saint Martin
+PM;São Pedro e Miquelão;Saint Pierre and Miquelon
+SX;São Martinho (Países Baixos);Sint Maarten
+GS;Geórgia do Sul e Ilhas Sandwich do Sul;South Georgia and the South Sandwich Islands
+SJ;Svalbard e Jan Mayen;Svalbard and Jan Mayen
+TK;Toquelau;Tokelau
+TC;Ilhas Turcas e Caicos;Turks and Caicos Islands
+UM;Ilhas Menores Afastadas dos Estados Unidos;United States Minor Outlying Islands
+VI;Ilhas Virgens Americanas;U.S. Virgin Islands
+WF;Wallis e Futuna;Wallis and Futuna
+EH;Sara Ocidental;Western Sahara
+AX;Aland;Åland Islands

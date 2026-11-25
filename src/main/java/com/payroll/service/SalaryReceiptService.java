@@ -7,6 +7,7 @@ import com.payroll.dto.PayrollResult;
 import com.payroll.dto.ProcessMonthResult;
 import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Employee;
+import com.payroll.model.EmploymentStatus;
 import com.payroll.model.SalaryReceipt;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.SalaryReceiptRepository;
@@ -99,9 +100,10 @@ public class SalaryReceiptService {
         receipt.setYear(year);
         receipt.setBaseSalary(employee.getBaseSalary());
         receipt.setOvertime(amountNamed(lines, "Overtime"));
-        receipt.setBonus(amountNamed(lines, "Christmas Bonus").add(amountNamed(lines, "Vacation Subsidy")));
-        receipt.setMealAllowance(amountNamed(lines, "Meal Allowance"));
-        receipt.setTransportAllowance(amountNamed(lines, "Transport Allowance"));
+        receipt.setBonus(amountNamed(lines, "Christmas Bonus", StandardRemunerations.CHRISTMAS_BONUS)
+                .add(amountNamed(lines, "Vacation Subsidy", StandardRemunerations.VACATION_SUBSIDY)));
+        receipt.setMealAllowance(amountNamed(lines, "Meal Allowance", StandardRemunerations.MEAL_ALLOWANCE));
+        receipt.setTransportAllowance(amountNamed(lines, "Transport Allowance", StandardRemunerations.TRANSPORT_ALLOWANCE));
         receipt.setOtherAllowances(otherAmounts(lines));
         receipt.setGrossAmount(result.getGross());
         receipt.setSocialSecurityContribution(result.getEmployeeSocialSecurity());
@@ -117,9 +119,9 @@ public class SalaryReceiptService {
         return receipt;
     }
 
-    private BigDecimal amountNamed(List<RemunerationLine> lines, String name) {
+    private BigDecimal amountNamed(List<RemunerationLine> lines, String... names) {
         return lines.stream()
-                .filter(line -> name.equals(line.getCategoryName()))
+                .filter(line -> matchesAny(line.getCategoryName(), names))
                 .map(line -> line.getAmount() == null ? BigDecimal.ZERO : line.getAmount())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
@@ -132,11 +134,22 @@ public class SalaryReceiptService {
     }
 
     private boolean isNamedColumn(String name) {
-        return "Overtime".equals(name)
-                || "Christmas Bonus".equals(name)
-                || "Vacation Subsidy".equals(name)
-                || "Meal Allowance".equals(name)
-                || "Transport Allowance".equals(name);
+        return matchesAny(name, "Overtime", "Christmas Bonus", StandardRemunerations.CHRISTMAS_BONUS,
+                "Vacation Subsidy", StandardRemunerations.VACATION_SUBSIDY,
+                "Meal Allowance", StandardRemunerations.MEAL_ALLOWANCE,
+                "Transport Allowance", StandardRemunerations.TRANSPORT_ALLOWANCE);
+    }
+
+    private static boolean matchesAny(String name, String... candidates) {
+        if (name == null) {
+            return false;
+        }
+        for (String candidate : candidates) {
+            if (name.equals(candidate)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String writeBreakdown(List<RemunerationLine> lines) {
@@ -148,6 +161,6 @@ public class SalaryReceiptService {
     }
 
     private boolean isActive(Employee employee) {
-        return employee.getStatus() == null || "ACTIVE".equalsIgnoreCase(employee.getStatus());
+        return employee.getStatus() == null || employee.getStatus() == EmploymentStatus.ACTIVE;
     }
 }

@@ -18,11 +18,6 @@ import java.util.List;
 @Component
 public class PayrollCalculator {
 
-    public static final BigDecimal EMPLOYEE_SOCIAL_SECURITY_RATE = new BigDecimal("0.11");
-    public static final BigDecimal EMPLOYER_SOCIAL_SECURITY_RATE = new BigDecimal("0.2375");
-    public static final BigDecimal MEAL_ALLOWANCE_EXEMPT_PER_DAY = new BigDecimal("6.00");
-    public static final BigDecimal DEPENDENT_DEDUCTION = new BigDecimal("50.00");
-
     // Temporary brackets: the rate applies to the whole subject amount, not marginally.
     private static final List<WithholdingBracket> WITHHOLDING_BRACKETS = List.of(
             new WithholdingBracket(new BigDecimal("1000.00"), BigDecimal.ZERO),
@@ -36,8 +31,8 @@ public class PayrollCalculator {
 
         BigDecimal gross = money(baseSalary.add(totalAmount(lines)));
         BigDecimal subject = money(baseSalary.add(totalSubjectPortion(lines)));
-        BigDecimal employeeSocialSecurity = money(subject.multiply(EMPLOYEE_SOCIAL_SECURITY_RATE));
-        BigDecimal employerSocialSecurity = money(subject.multiply(EMPLOYER_SOCIAL_SECURITY_RATE));
+        BigDecimal employeeSocialSecurity = money(subject.multiply(PayrollConstants.EMPLOYEE_SOCIAL_SECURITY_RATE));
+        BigDecimal employerSocialSecurity = money(subject.multiply(PayrollConstants.EMPLOYER_SOCIAL_SECURITY_RATE));
         BigDecimal tax = incomeTax(subject, input);
         BigDecimal net = money(gross.subtract(employeeSocialSecurity).subtract(tax));
 
@@ -71,7 +66,7 @@ public class PayrollCalculator {
         }
         if (rule == ContributionRule.MEAL_DAILY) {
             int days = line.getBusinessDays() == null ? 0 : line.getBusinessDays();
-            BigDecimal exempt = MEAL_ALLOWANCE_EXEMPT_PER_DAY.multiply(BigDecimal.valueOf(days));
+            BigDecimal exempt = PayrollConstants.MEAL_ALLOWANCE_EXEMPT_PER_DAY.multiply(BigDecimal.valueOf(days));
             return money(amount.subtract(exempt).max(BigDecimal.ZERO));
         }
         return amount;
@@ -82,7 +77,8 @@ public class PayrollCalculator {
      */
     private BigDecimal incomeTax(BigDecimal subject, PayrollInput input) {
         BigDecimal rate = withholdingRate(subject);
-        BigDecimal deduction = BigDecimal.valueOf(Math.max(input.dependents(), 0)).multiply(DEPENDENT_DEDUCTION);
+        BigDecimal deduction = BigDecimal.valueOf(Math.max(input.dependents(), 0))
+                .multiply(PayrollConstants.DEPENDENT_DEDUCTION);
         return money(subject.multiply(rate).subtract(deduction).max(BigDecimal.ZERO));
     }
 

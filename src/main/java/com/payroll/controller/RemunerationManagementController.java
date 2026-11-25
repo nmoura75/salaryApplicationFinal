@@ -171,16 +171,16 @@ public class RemunerationManagementController implements Initializable {
             if (category == null) {
                 continue;
             }
-            if ("Meal Allowance".equals(category.getName())) {
+            if (StandardRemunerations.MEAL_ALLOWANCE.equals(category.getName())) {
                 mealAllowanceField.setText(text(remuneration.getValue()));
                 mealAllowanceNotes.setText(text(remuneration.getNotes()));
-            } else if ("Christmas Bonus".equals(category.getName())) {
+            } else if (StandardRemunerations.CHRISTMAS_BONUS.equals(category.getName())) {
                 christmasBonusField.setText(text(remuneration.getValue()));
                 christmasBonusNotes.setText(text(remuneration.getNotes()));
-            } else if ("Vacation Subsidy".equals(category.getName())) {
+            } else if (StandardRemunerations.VACATION_SUBSIDY.equals(category.getName())) {
                 vacationSubsidyField.setText(text(remuneration.getValue()));
                 vacationSubsidyNotes.setText(text(remuneration.getNotes()));
-            } else if ("Transport Allowance".equals(category.getName())) {
+            } else if (StandardRemunerations.TRANSPORT_ALLOWANCE.equals(category.getName())) {
                 transportAllowanceField.setText(text(remuneration.getValue()));
                 transportAllowanceNotes.setText(text(remuneration.getNotes()));
             } else if ("Commission".equals(category.getName())) {
@@ -235,10 +235,10 @@ public class RemunerationManagementController implements Initializable {
             return;
         }
 
-        saveNamed(selectedEmployee.getId(), "Meal Allowance", mealAllowanceField.getText(), mealAllowanceNotes.getText());
-        saveNamed(selectedEmployee.getId(), "Christmas Bonus", christmasBonusField.getText(), christmasBonusNotes.getText());
-        saveNamed(selectedEmployee.getId(), "Vacation Subsidy", vacationSubsidyField.getText(), vacationSubsidyNotes.getText());
-        saveNamed(selectedEmployee.getId(), "Transport Allowance", transportAllowanceField.getText(), transportAllowanceNotes.getText());
+        saveNamed(selectedEmployee.getId(), StandardRemunerations.MEAL_ALLOWANCE, mealAllowanceField.getText(), mealAllowanceNotes.getText());
+        saveNamed(selectedEmployee.getId(), StandardRemunerations.CHRISTMAS_BONUS, christmasBonusField.getText(), christmasBonusNotes.getText());
+        saveNamed(selectedEmployee.getId(), StandardRemunerations.VACATION_SUBSIDY, vacationSubsidyField.getText(), vacationSubsidyNotes.getText());
+        saveNamed(selectedEmployee.getId(), StandardRemunerations.TRANSPORT_ALLOWANCE, transportAllowanceField.getText(), transportAllowanceNotes.getText());
         saveNamed(selectedEmployee.getId(), "Commission", commissionField.getText(), commissionNotes.getText());
 
         updateStatus("Default remunerations saved successfully!", "success");

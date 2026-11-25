@@ -1,5 +1,7 @@
 package com.payroll.controller;
 
+import com.payroll.config.Messages;
+import com.payroll.i18n.MessageKeys;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -29,6 +31,7 @@ public class ScreenNavigator {
     private static final String STYLESHEET = "/css/ios-style.css";
 
     private final ApplicationContext applicationContext;
+    private final Messages messages;
 
     public record WindowSize(double width, double height) {
     }
@@ -89,7 +92,7 @@ public class ScreenNavigator {
     }
 
     private <C> Scene loadScene(String fxmlPath, WindowSize size, Consumer<C> prepareController) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath), messages.bundle());
         loader.setControllerFactory(applicationContext::getBean);
         Parent root = loader.load();
         prepareController.accept(loader.getController());
@@ -99,12 +102,12 @@ public class ScreenNavigator {
         return scene;
     }
 
-    private void reportLoadFailure(String title, String fxmlPath, IOException exception) {
+    private void reportLoadFailure(String screenTitle, String fxmlPath, IOException exception) {
         log.error("Could not load screen {}", fxmlPath, exception);
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
+        alert.setTitle(messages.text(MessageKeys.ERROR_TITLE));
         alert.setHeaderText(null);
-        alert.setContentText("Could not open " + title + ": " + exception.getMessage());
+        alert.setContentText(messages.format(MessageKeys.SCREEN_LOAD_FAILED, screenTitle, exception.getMessage()));
         alert.showAndWait();
     }
 }

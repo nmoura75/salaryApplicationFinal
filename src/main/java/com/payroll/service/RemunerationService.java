@@ -1,18 +1,22 @@
 package com.payroll.service;
 
 import com.payroll.dto.RemunerationLine;
+import com.payroll.i18n.MessageKeys;
 import com.payroll.model.*;
 import com.payroll.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -81,6 +85,79 @@ public class RemunerationService {
 
     public List<RemunerationCategory> getCategoriesForCompany(Integer companyId) {
         return categoryRepository.findByCompanyIdAndIsActiveTrueOrderBySortOrderAsc(companyId);
+    }
+
+    @Transactional
+    public void ensureStandardTypes(Integer companyId) {
+        for (StandardRemunerations.Type type : StandardRemunerations.types()) {
+            if (!categoryRepository.existsByNameAndCompanyId(type.name(), companyId)) {
+                categoryRepository.save(StandardRemunerations.newCategory(type, companyId));
+            }
+        }
+    }
+
+    @Transactional
+    public RemunerationCategory addCategory(Integer companyId, String socialSecurityCode, String taxAuthorityCode,
+                                            String name, RemunerationCategory.RemunerationType type,
+                                            BigDecimal defaultValue) {
+        String description = requireName(name);
+        if (categoryRepository.existsByNameAndCompanyId(description, companyId)) {
+            throw new IllegalArgumentException(MessageKeys.INCOME_TYPE_EXISTS);
+        }
+        RemunerationCategory category = new RemunerationCategory();
+        category.setCompanyId(companyId);
+        category.setName(description);
+        category.setDescription(description);
+        category.setSocialSecurityCode(blankToNull(socialSecurityCode));
+        category.setTaxAuthorityCode(blankToNull(taxAuthorityCode));
+        category.setType(type == null ? RemunerationCategory.RemunerationType.MONTHLY : type);
+        category.setContributionRule(RemunerationCategory.ContributionRule.SUBJECT);
+        category.setDefaultValue(defaultValue == null ? BigDecimal.ZERO : defaultValue);
+        category.setActive(true);
+        category.setSortOrder(nextSortOrder(companyId));
+        return categoryRepository.save(category);
+    }
+
+    @Transactional
+    public RemunerationCategory updateCategory(Integer categoryId, String socialSecurityCode, String taxAuthorityCode,
+                                               String name, RemunerationCategory.RemunerationType type,
+                                               BigDecimal defaultValue) {
+        RemunerationCategory category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException(MessageKeys.INCOME_TYPE_REQUIRED));
+        String description = requireName(name);
+        Optional<RemunerationCategory> sameName = categoryRepository.findByNameAndCompanyId(description, category.getCompanyId());
+        if (sameName.isPresent() && !sameName.get().getId().equals(categoryId)) {
+            throw new IllegalArgumentException(MessageKeys.INCOME_TYPE_EXISTS);
+        }
+        category.setName(description);
+        category.setDescription(description);
+        category.setSocialSecurityCode(blankToNull(socialSecurityCode));
+        category.setTaxAuthorityCode(blankToNull(taxAuthorityCode));
+        category.setType(type == null ? RemunerationCategory.RemunerationType.MONTHLY : type);
+        category.setDefaultValue(defaultValue == null ? BigDecimal.ZERO : defaultValue);
+        return categoryRepository.save(category);
+    }
+
+    @Transactional
+    public void replaceMonthlyIncomes(Integer employeeId, List<MonthlyIncomeLine> lines) {
+        List<EmployeeRemuneration> existing = employeeRemunerationRepository.findByEmployeeIdAndIsActiveTrue(employeeId);
+        Set<Integer> kept = new HashSet<>();
+        for (MonthlyIncomeLine line : lines) {
+            if (line.categoryId() == null || line.amount() == null) {
+                continue;
+            }
+            RemunerationCategory category = categoryRepository.findById(line.categoryId()).orElse(null);
+            if (category == null || StandardRemunerations.isBaseSalary(category)) {
+                continue;
+            }
+            setEmployeeRemuneration(employeeId, line.categoryId(), line.amount(), null);
+            kept.add(line.categoryId());
+        }
+        for (EmployeeRemuneration row : existing) {
+            if (!kept.contains(row.getCategoryId())) {
+                employeeRemunerationRepository.delete(row);
+            }
+        }
     }
 
     public List<EmployeeRemuneration> getEmployeeRemunerations(Integer employeeId) {
@@ -210,5 +287,27 @@ public class RemunerationService {
             }
         }
         return businessDays;
+    }
+
+    private int nextSortOrder(Integer companyId) {
+        return categoryRepository.findByCompanyIdOrderBySortOrderAsc(companyId).stream()
+                .map(RemunerationCategory::getSortOrder)
+                .filter(order -> order != null)
+                .max(Integer::compareTo)
+                .orElse(0) + 1;
+    }
+
+    private static String requireName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException(MessageKeys.INCOME_TYPE_REQUIRED);
+        }
+        return name.trim();
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

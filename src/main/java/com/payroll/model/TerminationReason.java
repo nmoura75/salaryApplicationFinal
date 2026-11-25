@@ -1,0 +1,14 @@
+package com.payroll.model;
+
+public enum TerminationReason {
+    FIXED_TERM_EXPIRY,
+    MUTUAL_AGREEMENT,
+    RESIGNATION,
+    RESIGNATION_WITH_JUST_CAUSE,
+    DISMISSAL_WITH_JUST_CAUSE,
+    COLLECTIVE_DISMISSAL,
+    POSITION_ELIMINATED,
+    END_OF_TRIAL,
+    RETIREMENT,
+    DEATH
+}

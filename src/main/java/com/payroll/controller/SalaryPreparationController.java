@@ -4,6 +4,7 @@ import com.payroll.dto.PayrollInput;
 import com.payroll.dto.PayrollResult;
 import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Employee;
+import com.payroll.model.EmploymentStatus;
 import com.payroll.service.EmployeeService;
 import com.payroll.service.PayrollCalculator;
 import com.payroll.service.RemunerationService;
@@ -114,7 +115,7 @@ public class SalaryPreparationController {
             businessDaysField.setText(String.valueOf(remunerationService.getEffectiveBusinessDays(companyId, year, month)));
             List<PreviewRow> rows = new ArrayList<>();
             for (Employee employee : employeeService.getEmployeesByCompany(companyId)) {
-                if (employee.getStatus() != null && !"ACTIVE".equalsIgnoreCase(employee.getStatus())) {
+                if (employee.getStatus() != null && employee.getStatus() != EmploymentStatus.ACTIVE) {
                     continue;
                 }
                 List<RemunerationLine> lines = remunerationService.calculateLines(employee.getId(), companyId, year, month);

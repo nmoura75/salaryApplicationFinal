@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="16" styleClass="container" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.payroll.controller.ConfigurationController">
+    <padding>
+        <Insets top="20" right="24" bottom="20" left="24"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="16">
+        <Text text="%config.title" styleClass="title"/>
+        <Button fx:id="backButton" text="%action.back" onAction="#goBack" styleClass="back-button"/>
+    </HBox>
+
+    <TableView fx:id="typesTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="socialSecurityColumn" text="%config.socialSecurityCode" prefWidth="110"/>
+            <TableColumn fx:id="taxAuthorityColumn" text="%config.taxAuthorityCode" prefWidth="110"/>
+            <TableColumn fx:id="descriptionColumn" text="%config.description" prefWidth="420"/>
+            <TableColumn fx:id="defaultValueColumn" text="%config.defaultValue" prefWidth="140"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="12" alignment="BOTTOM_LEFT">
+        <VBox spacing="5">
+            <Label text="%config.socialSecurityCode" styleClass="label"/>
+            <TextField fx:id="socialSecurityField" prefWidth="120"/>
+        </VBox>
+        <VBox spacing="5">
+            <Label text="%config.taxAuthorityCode" styleClass="label"/>
+            <TextField fx:id="taxAuthorityField" prefWidth="120"/>
+        </VBox>
+        <VBox spacing="5" HBox.hgrow="ALWAYS">
+            <Label text="%config.description" styleClass="label"/>
+            <TextField fx:id="descriptionField"/>
+        </VBox>
+        <VBox spacing="5">
+            <Label text="%config.defaultValue" styleClass="label"/>
+            <TextField fx:id="defaultValueField" prefWidth="120"/>
+        </VBox>
+        <VBox spacing="5">
+            <Label text="%config.calculation" styleClass="label"/>
+            <ComboBox fx:id="calculationCombo" prefWidth="150"/>
+        </VBox>
+    </HBox>
+
+    <HBox spacing="12">
+        <Button text="%action.addType" onAction="#addType" styleClass="primary-button"/>
+        <Button fx:id="saveChangesButton" text="%action.saveChanges" onAction="#saveChanges" styleClass="secondary-button" disable="true"/>
+    </HBox>
+</VBox>

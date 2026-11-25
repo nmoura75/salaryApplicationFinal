@@ -43,6 +43,12 @@ public class RemunerationCategory {
     
     @Column(name = "sort_order")
     private Integer sortOrder;
+
+    @Column(name = "social_security_code")
+    private String socialSecurityCode;
+
+    @Column(name = "tax_authority_code")
+    private String taxAuthorityCode;
     
     public enum RemunerationType {
         DAILY,      // e.g., Meal allowance (per business day)

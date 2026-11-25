@@ -10,46 +10,42 @@
         <Insets top="20" right="20" bottom="20" left="20"/>
     </padding>
 
-    <!-- Header -->
     <HBox alignment="CENTER_LEFT" spacing="20">
-        <Text text="Employees Management" styleClass="title"/>
-        <Button fx:id="backButton" text="← Back to Main Menu" onAction="#goBackToMainMenu" styleClass="back-button"/>
+        <Text text="%menu.employees.title" styleClass="title"/>
+        <Button fx:id="backButton" text="%action.backToMain" onAction="#goBackToMainMenu" styleClass="back-button"/>
     </HBox>
-    
-    <!-- Company Name Display -->
+
     <HBox alignment="CENTER_LEFT" spacing="20">
         <Label fx:id="companyNameText" styleClass="label subtitle"/>
     </HBox>
 
-    <!-- Search and Add Employee -->
     <HBox spacing="20" alignment="CENTER_LEFT">
-        <TextField fx:id="searchField" promptText="Search employees..." prefWidth="300"/>
-        <Button text="Add New Employee" onAction="#showAddEmployeeDialog" styleClass="primary-button"/>
-        <Button text="Manage Remunerations" onAction="#showRemunerationManagement" styleClass="secondary-button"/>
+        <TextField fx:id="searchField" promptText="%employee.search" prefWidth="300"/>
+        <Button text="%action.addEmployee" onAction="#showAddEmployeeDialog" styleClass="primary-button"/>
+        <Button text="%action.manageRemunerations" onAction="#showRemunerationManagement" styleClass="secondary-button"/>
     </HBox>
 
-    <!-- Employees Table -->
     <TableView fx:id="employeesTable" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
-            <TableColumn fx:id="nameColumn" text="Name" prefWidth="150"/>
-            <TableColumn fx:id="taxIdColumn" text="Tax ID" prefWidth="100"/>
-            <TableColumn fx:id="socialSecurityIdColumn" text="Social Security ID" prefWidth="120"/>
-            <TableColumn fx:id="baseSalaryColumn" text="Base Salary" prefWidth="100"/>
-            <TableColumn fx:id="hireDateColumn" text="Hire Date" prefWidth="100"/>
-            <TableColumn fx:id="dateOfBirthColumn" text="Date of Birth" prefWidth="100"/>
-            <TableColumn fx:id="dependentsColumn" text="Dependents" prefWidth="80"/>
-            <TableColumn fx:id="irsTableColumn" text="IRS Table" prefWidth="80"/>
-            <TableColumn fx:id="statusColumn" text="Status" prefWidth="80"/>
+            <TableColumn fx:id="idColumn" text="%employee.column.id" prefWidth="50"/>
+            <TableColumn fx:id="nameColumn" text="%employee.column.name" prefWidth="150"/>
+            <TableColumn fx:id="taxIdColumn" text="%employee.column.taxId" prefWidth="100"/>
+            <TableColumn fx:id="socialSecurityIdColumn" text="%employee.column.socialSecurityId" prefWidth="120"/>
+            <TableColumn fx:id="baseSalaryColumn" text="%employee.column.baseSalary" prefWidth="110"/>
+            <TableColumn fx:id="hireDateColumn" text="%employee.column.hireDate" prefWidth="110"/>
+            <TableColumn fx:id="dateOfBirthColumn" text="%employee.column.dateOfBirth" prefWidth="120"/>
+            <TableColumn fx:id="dependentsColumn" text="%employee.column.dependents" prefWidth="90"/>
+            <TableColumn fx:id="withholdingTableColumn" text="%employee.column.withholdingTable" prefWidth="140"/>
+            <TableColumn fx:id="statusColumn" text="%employee.column.status" prefWidth="90"/>
+            <TableColumn fx:id="contractTypeColumn" text="%employee.column.contractType" prefWidth="120"/>
+            <TableColumn fx:id="professionColumn" text="%employee.column.profession" prefWidth="140"/>
         </columns>
     </TableView>
 
-    <!-- Action Buttons (enabled only when row is selected) -->
     <HBox spacing="15" alignment="CENTER_LEFT">
-        <Button fx:id="editButton" text="Edit Employee" onAction="#editSelectedEmployee" styleClass="secondary-button" disable="true"/>
-        <Button fx:id="deleteButton" text="Delete Employee" onAction="#deleteSelectedEmployee" styleClass="danger-button" disable="true"/>
+        <Button fx:id="editButton" text="%action.editEmployee" onAction="#editSelectedEmployee" styleClass="secondary-button" disable="true"/>
+        <Button fx:id="deleteButton" text="%action.deleteEmployee" onAction="#deleteSelectedEmployee" styleClass="danger-button" disable="true"/>
     </HBox>
 
-    <!-- Status Bar -->
     <Text fx:id="statusText" styleClass="status-text"/>
 </VBox>

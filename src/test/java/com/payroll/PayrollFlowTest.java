@@ -5,6 +5,7 @@ import com.payroll.dto.PayrollResult;
 import com.payroll.dto.RemunerationLine;
 import com.payroll.model.Company;
 import com.payroll.model.Employee;
+import com.payroll.model.MaritalStatus;
 import com.payroll.model.RemunerationCategory;
 import com.payroll.model.SalaryReceipt;
 import com.payroll.service.CompanyService;
@@ -78,13 +79,13 @@ class PayrollFlowTest {
     void mealAllowanceUsesStoredBusinessDays() {
         Company company = openNewCompany("Meal Company", "100000001", "SS100000001");
         Employee employee = employeeService.createEmployee(employee(company.getId(), "Ana", "100000001", "SS-E-100"));
-        RemunerationCategory meal = category(company.getId(), "Meal Allowance");
+        RemunerationCategory meal = category(company.getId(), "Subsídio de refeição");
         remunerationService.setEmployeeRemuneration(employee.getId(), meal.getId(), new BigDecimal("6.00"), null);
         remunerationService.setMonthlyBusinessDays(company.getId(), 2026, 3, 20);
 
         List<RemunerationLine> lines = remunerationService.calculateLines(employee.getId(), company.getId(), 2026, 3);
         RemunerationLine mealLine = lines.stream()
-                .filter(line -> "Meal Allowance".equals(line.getCategoryName()))
+                .filter(line -> "Subsídio de refeição".equals(line.getCategoryName()))
                 .findFirst()
                 .orElseThrow();
 
@@ -96,7 +97,7 @@ class PayrollFlowTest {
     void processedMonthUsesTheSharedCalculator() {
         Company company = openNewCompany("Receipt Company", "100000002", "SS100000002");
         Employee employee = employeeService.createEmployee(employee(company.getId(), "Bruno", "100000002", "SS-E-200"));
-        RemunerationCategory meal = category(company.getId(), "Meal Allowance");
+        RemunerationCategory meal = category(company.getId(), "Subsídio de refeição");
         remunerationService.setEmployeeRemuneration(employee.getId(), meal.getId(), new BigDecimal("6.00"), null);
         remunerationService.setMonthlyBusinessDays(company.getId(), 2026, 3, 20);
 
@@ -140,11 +141,9 @@ class PayrollFlowTest {
         employee.setSocialSecurityId(socialSecurityId);
         employee.setHireDate("2024-01-01");
         employee.setBaseSalary(new BigDecimal("1000.00"));
-        employee.setFamiliarSituation(1);
+        employee.setMaritalStatus(MaritalStatus.NOT_MARRIED);
         employee.setUsefulDaysOfWork(22);
         employee.setDependents(0);
-        employee.setIrsTable(1);
-        employee.setStatus("ACTIVE");
         return employee;
     }
 
