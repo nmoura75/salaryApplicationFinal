@@ -11,6 +11,7 @@ import com.payroll.service.RemunerationService;
 import jakarta.persistence.EntityNotFoundException;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -77,7 +78,27 @@ public class SalaryPreparationController {
         employerSocialSecurityColumn.setCellValueFactory(row -> new SimpleStringProperty(row.getValue().getEmployerSocialSecurity()));
         taxColumn.setCellValueFactory(row -> new SimpleStringProperty(row.getValue().getTax()));
         netColumn.setCellValueFactory(row -> new SimpleStringProperty(row.getValue().getNet()));
+        styleMoneyColumn(grossColumn);
+        styleMoneyColumn(employeeSocialSecurityColumn);
+        styleMoneyColumn(employerSocialSecurityColumn);
+        styleMoneyColumn(taxColumn);
+        styleMoneyColumn(netColumn);
         previewTable.getSelectionModel().selectedItemProperty().addListener((observable, oldRow, newRow) -> showOverrides(newRow));
+    }
+
+    private void styleMoneyColumn(TableColumn<PreviewRow, String> column) {
+        column.setCellFactory(col -> new TableCell<>() {
+            {
+                getStyleClass().add("money-cell");
+                setAlignment(Pos.CENTER_RIGHT);
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item);
+            }
+        });
     }
 
     public void setCompanyName(String companyName) {

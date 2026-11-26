@@ -34,11 +34,11 @@
     <TableView fx:id="previewTable" VBox.vgrow="ALWAYS">
         <columns>
             <TableColumn fx:id="employeeColumn" text="Employee" prefWidth="220"/>
-            <TableColumn fx:id="grossColumn" text="Gross" prefWidth="110"/>
-            <TableColumn fx:id="employeeSocialSecurityColumn" text="Employee SS" prefWidth="120"/>
-            <TableColumn fx:id="employerSocialSecurityColumn" text="Employer SS" prefWidth="120"/>
-            <TableColumn fx:id="taxColumn" text="Tax" prefWidth="110"/>
-            <TableColumn fx:id="netColumn" text="Net" prefWidth="110"/>
+            <TableColumn fx:id="grossColumn" text="Gross" prefWidth="110" styleClass="money-cell"/>
+            <TableColumn fx:id="employeeSocialSecurityColumn" text="Employee SS" prefWidth="120" styleClass="money-cell"/>
+            <TableColumn fx:id="employerSocialSecurityColumn" text="Employer SS" prefWidth="120" styleClass="money-cell"/>
+            <TableColumn fx:id="taxColumn" text="Tax" prefWidth="110" styleClass="money-cell"/>
+            <TableColumn fx:id="netColumn" text="Net" prefWidth="110" styleClass="money-cell"/>
         </columns>
     </TableView>
 

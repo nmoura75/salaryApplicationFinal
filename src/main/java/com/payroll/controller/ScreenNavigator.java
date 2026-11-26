@@ -28,7 +28,7 @@ public class ScreenNavigator {
 
     public static final WindowSize MAIN_WINDOW = new WindowSize(1200, 800);
 
-    private static final String STYLESHEET = "/css/ios-style.css";
+    private static final String STYLESHEET = "/css/workbench-dark.css";
 
     private final ApplicationContext applicationContext;
     private final Messages messages;

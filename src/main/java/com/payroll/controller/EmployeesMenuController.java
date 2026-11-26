@@ -124,6 +124,11 @@ public class EmployeesMenuController {
         professionColumn.setCellValueFactory(new PropertyValueFactory<>("position"));
 
         baseSalaryColumn.setCellFactory(column -> new TableCell<>() {
+            {
+                getStyleClass().add("money-cell");
+                setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+            }
+
             @Override
             protected void updateItem(BigDecimal item, boolean empty) {
                 super.updateItem(item, empty);
@@ -141,14 +146,15 @@ public class EmployeesMenuController {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
-                    setStyle("");
+                    getStyleClass().removeAll("status-active", "status-inactive");
                     return;
                 }
                 setText(messages.enumText(item));
+                getStyleClass().removeAll("status-active", "status-inactive");
                 if (item == EmploymentStatus.ACTIVE) {
-                    setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+                    getStyleClass().add("status-active");
                 } else {
-                    setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                    getStyleClass().add("status-inactive");
                 }
             }
         });
