@@ -78,7 +78,7 @@ class PayrollFlowTest {
     @Test
     void mealAllowanceUsesStoredBusinessDays() {
         Company company = openNewCompany("Meal Company", "100000001", "SS100000001");
-        Employee employee = employeeService.createEmployee(employee(company.getId(), "Ana", "100000001", "SS-E-100"));
+        Employee employee = employeeService.createEmployee(employee(company.getId(), "Ana", "100000001", "11911111100"));
         RemunerationCategory meal = category(company.getId(), "Subsídio de refeição");
         remunerationService.setEmployeeRemuneration(employee.getId(), meal.getId(), new BigDecimal("6.00"), null);
         remunerationService.setMonthlyBusinessDays(company.getId(), 2026, 3, 20);
@@ -96,7 +96,7 @@ class PayrollFlowTest {
     @Test
     void processedMonthUsesTheSharedCalculator() {
         Company company = openNewCompany("Receipt Company", "100000002", "SS100000002");
-        Employee employee = employeeService.createEmployee(employee(company.getId(), "Bruno", "100000002", "SS-E-200"));
+        Employee employee = employeeService.createEmployee(employee(company.getId(), "Bruno", "100000002", "11911111200"));
         RemunerationCategory meal = category(company.getId(), "Subsídio de refeição");
         remunerationService.setEmployeeRemuneration(employee.getId(), meal.getId(), new BigDecimal("6.00"), null);
         remunerationService.setMonthlyBusinessDays(company.getId(), 2026, 3, 20);
@@ -115,7 +115,7 @@ class PayrollFlowTest {
     @Test
     void employeeInOneCompanyIsNotVisibleInAnother() {
         Company first = openNewCompany("Company A", "100000003", "SS100000003");
-        employeeService.createEmployee(employee(first.getId(), "Carla", "100000003", "SS-E-300"));
+        employeeService.createEmployee(employee(first.getId(), "Carla", "100000003", "11911111300"));
         companyService.closeCompany();
 
         openNewCompany("Company B", "100000004", "SS100000004");

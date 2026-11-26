@@ -20,6 +20,9 @@ public final class MessageKeys {
     public static final String INCOME_TYPE_EXISTS = "error.incomeTypeExists";
     public static final String INVALID_AMOUNT = "error.invalidAmount";
     public static final String DUPLICATE_INCOME = "error.duplicateIncome";
+    public static final String INVALID_NIF = "error.invalidNif";
+    public static final String INVALID_NISS = "error.invalidNiss";
+    public static final String INVALID_BIRTH_DATE = "error.invalidBirthDate";
 
     public static final String CONFIRM_DELETE_TITLE = "confirm.deleteTitle";
     public static final String CONFIRM_DELETE_HEADER = "confirm.deleteHeader";

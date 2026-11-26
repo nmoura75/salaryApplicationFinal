@@ -34,6 +34,7 @@ public class EmployeeService {
 
     @Transactional
     public Employee createEmployee(Employee employee) {
+        normalizeIdentification(employee);
         validateNewEmployee(employee);
 
         if (employee.getCompanyId() == null) {
@@ -54,6 +55,7 @@ public class EmployeeService {
     @Transactional
     public Employee updateEmployee(Integer id, Employee employeeDetails) {
         Employee employee = getEmployeeById(id);
+        normalizeIdentification(employeeDetails);
 
         if (!employee.getTaxId().equals(employeeDetails.getTaxId()) &&
                 employeeRepository.existsByTaxId(employeeDetails.getTaxId())) {
@@ -103,6 +105,19 @@ public class EmployeeService {
             throw new EntityNotFoundException("Employee not found with id: " + id);
         }
         employeeRepository.deleteById(id);
+    }
+
+    private void normalizeIdentification(Employee employee) {
+        String nif = IdentificationNumbers.nif(employee.getTaxId());
+        if (nif == null) {
+            throw new IllegalArgumentException(MessageKeys.INVALID_NIF);
+        }
+        String niss = IdentificationNumbers.niss(employee.getSocialSecurityId());
+        if (niss == null) {
+            throw new IllegalArgumentException(MessageKeys.INVALID_NISS);
+        }
+        employee.setTaxId(nif);
+        employee.setSocialSecurityId(niss);
     }
 
     private void validateNewEmployee(Employee employee) {

@@ -17,6 +17,7 @@ import com.payroll.model.WorkingTime;
 import com.payroll.reference.CountryDirectory;
 import com.payroll.reference.CountryDirectory.Country;
 import com.payroll.service.EmployeeService;
+import com.payroll.service.IdentificationNumbers;
 import com.payroll.service.MonthlyIncomeLine;
 import com.payroll.service.PayrollConstants;
 import com.payroll.service.RemunerationService;
@@ -30,6 +31,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -42,6 +44,8 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.control.skin.DatePickerSkin;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import javafx.stage.Stage;
@@ -50,12 +54,19 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class EmployeeFormDialogController {
+
+    private static final DateTimeFormatter BIRTH_DATE = DateTimeFormatter.ofPattern("d/M/uuuu");
+    private static final DateTimeFormatter BIRTH_DATE_DISPLAY = DateTimeFormatter.ofPattern("dd/MM/uuuu");
+    private static final int NIF_MAX_DIGITS = IdentificationNumbers.NIF_MAX_DIGITS;
+    private static final int NISS_DIGITS = IdentificationNumbers.NISS_DIGITS;
 
     private final EmployeeService employeeService;
     private final RemunerationService remunerationService;
@@ -125,6 +136,8 @@ public class EmployeeFormDialogController {
     @FXML
     private TextField incomeAmountField;
     @FXML
+    private Label incomeAmountLabel;
+    @FXML
     private TableView<MonthlyIncome> monthlyIncomeTable;
     @FXML
     private TextField bankNameField;
@@ -156,7 +169,12 @@ public class EmployeeFormDialogController {
         nationalityCombo.getItems().setAll(CountryDirectory.sorted(messages.locale()));
         nationalityCombo.setConverter(countryConverter());
         incomeTypeCombo.setConverter(categoryConverter());
+        incomeTypeCombo.valueProperty().addListener((observable, previous, current) -> updateIncomeAmountLabel());
+        prepareBirthDate();
+        taxIdField.setTextFormatter(digitFormatter(NIF_MAX_DIGITS));
+        socialSecurityIdField.setTextFormatter(digitFormatter(NISS_DIGITS));
         setupMonthlyIncomeTable();
+        updateIncomeAmountLabel();
 
         dependentsSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 20, 0));
         statusCombo.getSelectionModel().select(EmploymentStatus.ACTIVE);
@@ -216,6 +234,18 @@ public class EmployeeFormDialogController {
     private void save() {
         if (!requiredFieldsFilled()) {
             showError(messages.text(MessageKeys.VALIDATION_TITLE), messages.text(MessageKeys.REQUIRED_FIELDS));
+            return;
+        }
+        if (IdentificationNumbers.nif(taxIdField.getText()) == null) {
+            showError(messages.text(MessageKeys.VALIDATION_TITLE), messages.text(MessageKeys.INVALID_NIF));
+            return;
+        }
+        if (IdentificationNumbers.niss(socialSecurityIdField.getText()) == null) {
+            showError(messages.text(MessageKeys.VALIDATION_TITLE), messages.text(MessageKeys.INVALID_NISS));
+            return;
+        }
+        if (!birthDateAccepted()) {
+            showError(messages.text(MessageKeys.VALIDATION_TITLE), messages.text(MessageKeys.INVALID_BIRTH_DATE));
             return;
         }
         BigDecimal salary = parseSalary(baseSalaryField.getText());
@@ -311,8 +341,8 @@ public class EmployeeFormDialogController {
     private void readForm(Employee target, BigDecimal salary) {
         target.setFirstName(firstNameField.getText().trim());
         target.setLastName(lastNameField.getText().trim());
-        target.setTaxId(taxIdField.getText().trim());
-        target.setSocialSecurityId(socialSecurityIdField.getText().trim());
+        target.setTaxId(IdentificationNumbers.nif(taxIdField.getText()));
+        target.setSocialSecurityId(IdentificationNumbers.niss(socialSecurityIdField.getText()));
         target.setDateOfBirth(StoredDates.iso(dateOfBirthPicker.getValue()));
         target.setGender(genderCombo.getValue());
         target.setNationality(selectedNationality());
@@ -470,10 +500,14 @@ public class EmployeeFormDialogController {
     private void setupMonthlyIncomeTable() {
         TableColumn<MonthlyIncome, String> typeColumn = new TableColumn<>(messages.text("employee.incomeType"));
         typeColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().category().getName()));
-        typeColumn.setPrefWidth(420);
+        typeColumn.setPrefWidth(320);
+        TableColumn<MonthlyIncome, String> unitColumn = new TableColumn<>(messages.text("employee.incomeUnit"));
+        unitColumn.setCellValueFactory(data -> new SimpleStringProperty(amountUnit(data.getValue().category())));
+        unitColumn.setPrefWidth(110);
         TableColumn<MonthlyIncome, String> amountColumn = new TableColumn<>(messages.text("employee.incomeAmount"));
         amountColumn.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().amount().toPlainString()));
-        amountColumn.setPrefWidth(120);
+        amountColumn.setPrefWidth(140);
+        amountColumn.setCellFactory(column -> incomeAmountCell());
         TableColumn<MonthlyIncome, Void> removeColumn = new TableColumn<>();
         removeColumn.setPrefWidth(110);
         removeColumn.setCellFactory(column -> new TableCell<>() {
@@ -494,8 +528,145 @@ public class EmployeeFormDialogController {
                 setGraphic(empty ? null : removeButton);
             }
         });
-        monthlyIncomeTable.getColumns().setAll(typeColumn, amountColumn, removeColumn);
+        monthlyIncomeTable.getColumns().setAll(typeColumn, unitColumn, amountColumn, removeColumn);
         monthlyIncomeTable.setItems(monthlyIncomes);
+    }
+
+    private TableCell<MonthlyIncome, String> incomeAmountCell() {
+        return new TableCell<>() {
+            private final TextField amountField = new TextField();
+            private boolean refreshing;
+
+            {
+                amountField.setMaxWidth(Double.MAX_VALUE);
+                amountField.setOnAction(event -> applyAmount());
+                amountField.focusedProperty().addListener((observable, wasFocused, focused) -> {
+                    if (!focused) {
+                        applyAmount();
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                MonthlyIncome row = empty ? null : getTableRow().getItem();
+                if (row == null) {
+                    setGraphic(null);
+                    return;
+                }
+                if (!amountField.isFocused()) {
+                    refreshing = true;
+                    amountField.setText(row.amount().toPlainString());
+                    refreshing = false;
+                }
+                setText(null);
+                setGraphic(amountField);
+            }
+
+            private void applyAmount() {
+                if (refreshing) {
+                    return;
+                }
+                MonthlyIncome row = getTableRow() == null ? null : getTableRow().getItem();
+                if (row == null) {
+                    return;
+                }
+                BigDecimal amount = parseSalary(amountField.getText());
+                if (amount == null) {
+                    refreshing = true;
+                    amountField.setText(row.amount().toPlainString());
+                    refreshing = false;
+                    showError(messages.text(MessageKeys.VALIDATION_TITLE), messages.text(MessageKeys.INVALID_AMOUNT));
+                    return;
+                }
+                row.setAmount(amount);
+            }
+        };
+    }
+
+    private void updateIncomeAmountLabel() {
+        RemunerationCategory category = incomeTypeCombo.getValue();
+        String key = "employee.incomeAmount";
+        if (category != null) {
+            key = dailyRate(category) ? "employee.amountPerDay" : "employee.amountPerMonth";
+        }
+        incomeAmountLabel.setText(messages.text(key));
+    }
+
+    private String amountUnit(RemunerationCategory category) {
+        return messages.text(dailyRate(category) ? "employee.perDay" : "employee.perMonth");
+    }
+
+    private static boolean dailyRate(RemunerationCategory category) {
+        return category.getType() == RemunerationCategory.RemunerationType.DAILY
+                || category.getContributionRule() == RemunerationCategory.ContributionRule.MEAL_DAILY;
+    }
+
+    private void prepareBirthDate() {
+        dateOfBirthPicker.setEditable(true);
+        dateOfBirthPicker.setConverter(birthDateConverter());
+        dateOfBirthPicker.setPromptText(messages.text("employee.dateFormat"));
+        dateOfBirthPicker.showingProperty().addListener((observable, wasShowing, showing) -> {
+            if (showing) {
+                Platform.runLater(this::makeBirthYearEditable);
+            }
+        });
+    }
+
+    private void makeBirthYearEditable() {
+        if (!(dateOfBirthPicker.getSkin() instanceof DatePickerSkin skin)) {
+            return;
+        }
+        for (Node node : skin.getPopupContent().lookupAll(".spinner")) {
+            if (node instanceof Spinner<?> spinner && spinner.getValue() instanceof Integer year && year >= 1000) {
+                spinner.setEditable(true);
+            }
+        }
+    }
+
+    private boolean birthDateAccepted() {
+        if (dateOfBirthPicker.getEditor() == null) {
+            return true;
+        }
+        String typed = dateOfBirthPicker.getEditor().getText();
+        if (typed == null || typed.isBlank()) {
+            dateOfBirthPicker.setValue(null);
+            return true;
+        }
+        try {
+            dateOfBirthPicker.setValue(LocalDate.parse(typed.trim(), BIRTH_DATE));
+            return true;
+        } catch (DateTimeParseException exception) {
+            return false;
+        }
+    }
+
+    private StringConverter<LocalDate> birthDateConverter() {
+        return new StringConverter<>() {
+            @Override
+            public String toString(LocalDate date) {
+                return date == null ? "" : BIRTH_DATE_DISPLAY.format(date);
+            }
+
+            @Override
+            public LocalDate fromString(String value) {
+                if (value == null || value.isBlank()) {
+                    return null;
+                }
+                return LocalDate.parse(value.trim(), BIRTH_DATE);
+            }
+        };
+    }
+
+    private static TextFormatter<String> digitFormatter(int maxDigits) {
+        return new TextFormatter<>(change -> {
+            String next = change.getControlNewText();
+            if (next.length() > maxDigits || !next.chars().allMatch(Character::isDigit)) {
+                return null;
+            }
+            return change;
+        });
     }
 
     private void showNationality(String stored) {
@@ -540,7 +711,26 @@ public class EmployeeFormDialogController {
         };
     }
 
-    private record MonthlyIncome(RemunerationCategory category, BigDecimal amount) {
+    private static final class MonthlyIncome {
+        private final RemunerationCategory category;
+        private BigDecimal amount;
+
+        private MonthlyIncome(RemunerationCategory category, BigDecimal amount) {
+            this.category = category;
+            this.amount = amount;
+        }
+
+        private RemunerationCategory category() {
+            return category;
+        }
+
+        private BigDecimal amount() {
+            return amount;
+        }
+
+        private void setAmount(BigDecimal amount) {
+            this.amount = amount;
+        }
     }
 
     private <E extends Enum<E>> void fill(ComboBox<E> combo, Class<E> type) {

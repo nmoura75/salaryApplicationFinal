@@ -43,7 +43,7 @@
                             </VBox>
                             <VBox spacing="5" HBox.hgrow="ALWAYS">
                                 <Label text="%employee.dateOfBirth" styleClass="label"/>
-                                <DatePicker fx:id="dateOfBirthPicker"/>
+                                <DatePicker fx:id="dateOfBirthPicker" promptText="%employee.dateFormat"/>
                             </VBox>
                         </HBox>
                         <HBox spacing="15">
@@ -172,15 +172,21 @@
                             </VBox>
                         </HBox>
                         <VBox spacing="8">
-                            <Label text="%employee.monthlyIncome" styleClass="label subtitle"/>
-                            <Label text="%employee.monthlyIncomeNote" styleClass="label" wrapText="true"/>
+                            <HBox spacing="8" alignment="CENTER_LEFT">
+                                <Label text="%employee.monthlyIncome" styleClass="label subtitle"/>
+                                <Label text="i" styleClass="info-icon">
+                                    <tooltip>
+                                        <Tooltip text="%employee.monthlyIncomeNote" wrapText="true" maxWidth="360"/>
+                                    </tooltip>
+                                </Label>
+                            </HBox>
                             <HBox spacing="12" alignment="BOTTOM_LEFT">
                                 <VBox spacing="5" HBox.hgrow="ALWAYS">
                                     <Label text="%employee.incomeType" styleClass="label"/>
                                     <ComboBox fx:id="incomeTypeCombo" maxWidth="Infinity"/>
                                 </VBox>
                                 <VBox spacing="5">
-                                    <Label text="%employee.incomeAmount" styleClass="label"/>
+                                    <Label fx:id="incomeAmountLabel" text="%employee.incomeAmount" styleClass="label"/>
                                     <TextField fx:id="incomeAmountField" prefWidth="140"/>
                                 </VBox>
                                 <Button text="%action.add" onAction="#addMonthlyIncome" styleClass="secondary-button"/>

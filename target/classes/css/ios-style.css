@@ -385,6 +385,21 @@
     -fx-background-color: #f2f2f7;
 }
 
+.info-icon {
+    -fx-background-color: #007aff;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-min-width: 18px;
+    -fx-min-height: 18px;
+    -fx-max-width: 18px;
+    -fx-max-height: 18px;
+    -fx-background-radius: 9px;
+    -fx-alignment: center;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
 /* Tooltips */
 .tooltip {
     -fx-background-color: #1c1c1e;

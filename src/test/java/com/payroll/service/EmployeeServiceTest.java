@@ -73,7 +73,7 @@ class EmployeeServiceTest {
     @Test
     void fixedTermWithoutEndDateIsRejected() {
         Company company = openNewCompany("Fixed Term Company", "200000001", "SS200000001");
-        Employee employee = employee(company.getId(), "200000001", "SS-E-201");
+        Employee employee = employee(company.getId(), "200000001", "11911111201");
         employee.setContractType(ContractType.FIXED_TERM);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -85,7 +85,7 @@ class EmployeeServiceTest {
     @Test
     void inactiveEmployeeNeedsTerminationDateAndReason() {
         Company company = openNewCompany("Inactive Company", "200000002", "SS200000002");
-        Employee missingDate = employee(company.getId(), "200000002", "SS-E-202");
+        Employee missingDate = employee(company.getId(), "200000002", "11911111202");
         missingDate.setStatus(EmploymentStatus.INACTIVE);
         missingDate.setTerminationReason(TerminationReason.RESIGNATION);
 
@@ -93,7 +93,7 @@ class EmployeeServiceTest {
                 () -> employeeService.createEmployee(missingDate));
         assertEquals(MessageKeys.INACTIVE_NEEDS_TERMINATION, missingDateError.getMessage());
 
-        Employee missingReason = employee(company.getId(), "200000012", "SS-E-212");
+        Employee missingReason = employee(company.getId(), "200000012", "11911111212");
         missingReason.setStatus(EmploymentStatus.INACTIVE);
         missingReason.setTerminationDate("2026-03-01");
 
@@ -105,7 +105,7 @@ class EmployeeServiceTest {
     @Test
     void terminationDateBeforeHireDateIsRejected() {
         Company company = openNewCompany("Dates Company", "200000003", "SS200000003");
-        Employee employee = employee(company.getId(), "200000003", "SS-E-203");
+        Employee employee = employee(company.getId(), "200000003", "11911111203");
         employee.setStatus(EmploymentStatus.INACTIVE);
         employee.setTerminationDate("2023-12-31");
         employee.setTerminationReason(TerminationReason.RESIGNATION);
@@ -119,7 +119,7 @@ class EmployeeServiceTest {
     @Test
     void savedEmployeeKeepsDetailsAndDerivedWithholdingTable() {
         Company company = openNewCompany("Details Company", "200000004", "SS200000004");
-        Employee employee = employee(company.getId(), "200000004", "SS-E-204");
+        Employee employee = employee(company.getId(), "200000004", "11911111204");
         employee.setMaritalStatus(MaritalStatus.MARRIED);
         employee.setIncomeHolders(IncomeHolders.SINGLE_HOLDER);
         employee.setDependents(2);
@@ -144,6 +144,27 @@ class EmployeeServiceTest {
 
         assertEquals(WithholdingTable.TABLE_II, updated.getWithholdingTable());
         assertEquals("Rua Nova 2", updated.getAddress());
+    }
+
+    @Test
+    void taxNumberAndSocialSecurityNumberFollowTheDigitRules() {
+        Company company = openNewCompany("Identity Company", "200000006", "SS200000006");
+        Employee shortNif = employee(company.getId(), "1234567", "11911111206");
+
+        IllegalArgumentException nifError = assertThrows(IllegalArgumentException.class,
+                () -> employeeService.createEmployee(shortNif));
+        assertEquals(MessageKeys.INVALID_NIF, nifError.getMessage());
+
+        Employee shortNiss = employee(company.getId(), "12345678", "119111112");
+        IllegalArgumentException nissError = assertThrows(IllegalArgumentException.class,
+                () -> employeeService.createEmployee(shortNiss));
+        assertEquals(MessageKeys.INVALID_NISS, nissError.getMessage());
+
+        Employee spaced = employee(company.getId(), "1234 5678", "119 1111 1207");
+        Employee saved = employeeService.createEmployee(spaced);
+
+        assertEquals("12345678", saved.getTaxId());
+        assertEquals("11911111207", saved.getSocialSecurityId());
     }
 
     @Test
