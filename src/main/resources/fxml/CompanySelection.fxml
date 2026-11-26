@@ -22,10 +22,9 @@
     <!-- Company Selection Section -->
     <VBox spacing="20" maxWidth="600" prefWidth="600" alignment="CENTER">
         <VBox spacing="20" alignment="CENTER">
-            <Label text="Select Existing Company" styleClass="label subtitle" style="-fx-font-size: 18px;"/>
-            <ComboBox fx:id="companyComboBox" promptText="Choose a company..." 
-                      maxWidth="600" prefWidth="600"
-                      style="-fx-background-color: white; -fx-font-size: 16px;"/>
+            <Label text="Select Existing Company" styleClass="label subtitle"/>
+            <ComboBox fx:id="companyComboBox" promptText="Choose a company..."
+                      maxWidth="600" prefWidth="600"/>
             <Button text="Open Company" styleClass="button" onAction="#openSelectedCompany"/>
             <Button text="Delete Company" styleClass="button secondary" onAction="#deleteSelectedCompany"/>
         </VBox>

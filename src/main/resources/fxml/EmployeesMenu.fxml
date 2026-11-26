@@ -31,7 +31,7 @@
             <TableColumn fx:id="nameColumn" text="%employee.column.name" prefWidth="150"/>
             <TableColumn fx:id="taxIdColumn" text="%employee.column.taxId" prefWidth="100"/>
             <TableColumn fx:id="socialSecurityIdColumn" text="%employee.column.socialSecurityId" prefWidth="120"/>
-            <TableColumn fx:id="baseSalaryColumn" text="%employee.column.baseSalary" prefWidth="110"/>
+            <TableColumn fx:id="baseSalaryColumn" text="%employee.column.baseSalary" prefWidth="110" styleClass="money-cell"/>
             <TableColumn fx:id="hireDateColumn" text="%employee.column.hireDate" prefWidth="110"/>
             <TableColumn fx:id="dateOfBirthColumn" text="%employee.column.dateOfBirth" prefWidth="120"/>
             <TableColumn fx:id="dependentsColumn" text="%employee.column.dependents" prefWidth="90"/>

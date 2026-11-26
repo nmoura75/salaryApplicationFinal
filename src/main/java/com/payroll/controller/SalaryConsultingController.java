@@ -8,6 +8,7 @@ import com.payroll.service.SalaryReceiptService;
 import jakarta.persistence.EntityNotFoundException;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
@@ -66,6 +67,24 @@ public class SalaryConsultingController {
         grossColumn.setCellValueFactory(row -> new SimpleStringProperty(row.getValue().getGross()));
         netColumn.setCellValueFactory(row -> new SimpleStringProperty(row.getValue().getNet()));
         taxColumn.setCellValueFactory(row -> new SimpleStringProperty(row.getValue().getTax()));
+        styleMoneyColumn(grossColumn);
+        styleMoneyColumn(netColumn);
+        styleMoneyColumn(taxColumn);
+    }
+
+    private void styleMoneyColumn(TableColumn<ReceiptRow, String> column) {
+        column.setCellFactory(col -> new TableCell<>() {
+            {
+                getStyleClass().add("money-cell");
+                setAlignment(Pos.CENTER_RIGHT);
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item);
+            }
+        });
     }
 
     public void setCompanyName(String companyName) {
